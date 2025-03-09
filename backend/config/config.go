@@ -13,10 +13,9 @@ import (
 var DB *mongo.Database
 
 func ConnectDB() {
-	// Читаем MONGO_URI из переменной окружения
 	uri := os.Getenv("MONGO_URI")
 	if uri == "" {
-		uri = "mongodb://localhost:27017/filestorage" // Значение по умолчанию
+		uri = "mongodb://localhost:27017/filestorage"
 	}
 
 	clientOptions := options.Client().ApplyURI(uri)

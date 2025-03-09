@@ -4,14 +4,24 @@ import (
 	"github.com/gorilla/mux"
 
 	"backend/handlers"
+	"backend/middleware"
 )
 
 func RegisterRoutes() *mux.Router {
-	r := mux.NewRouter()
+	router := mux.NewRouter()
 
-	// Эндпоинты
-	r.HandleFunc("/files/upload", handlers.UploadFile).Methods("POST")
-	r.HandleFunc("/files/{file_id}", handlers.DownloadFile).Methods("GET")
+	// auth
+	router.HandleFunc("/register", handlers.RegisterUser).Methods("POST")
+	router.HandleFunc("/login", handlers.LoginUser).Methods("POST")
 
-	return r
+	// protect
+	protected := router.PathPrefix("/api").Subrouter()
+	protected.Use(middleware.AuthMiddleware)
+
+	// files
+	protected.HandleFunc("/files/upload", handlers.UploadFile).Methods("POST")
+	protected.HandleFunc("/files/{file_id}", handlers.DownloadFile).Methods("GET")
+	protected.HandleFunc("/files", handlers.GetUserFiles).Methods("GET")
+
+	return router
 }
