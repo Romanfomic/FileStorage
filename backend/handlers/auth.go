@@ -1,103 +1,92 @@
 package handlers
 
 import (
-	"context"
+	"database/sql"
 	"encoding/json"
-	"log"
 	"net/http"
-	"os"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-
+	"backend/config"
 	"backend/models"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 var jwtKey = []byte("secret_key")
 
 type CustomClaims struct {
-	UserID string `json:"user_id"`
+	UserID int `json:"user_id"`
 	jwt.RegisteredClaims
 }
 
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	var user models.User
-	err := json.NewDecoder(r.Body).Decode(&user)
-	if err != nil {
-		http.Error(w, "Ошибка декодирования данных", http.StatusBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		http.Error(w, "JSON decode error", http.StatusBadRequest)
 		return
 	}
 
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(os.Getenv("MONGO_URI")))
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer client.Disconnect(context.TODO())
-
-	collection := client.Database("filestorage").Collection("users")
-
-	var existingUser models.User
-	err = collection.FindOne(context.TODO(), bson.M{"email": user.Email}).Decode(&existingUser)
-	if err == nil {
-		http.Error(w, "Email уже используется", http.StatusConflict)
+	var existingID int
+	err := config.PostgresDB.QueryRow("SELECT user_id FROM Users WHERE login = $1", user.Login).Scan(&existingID)
+	if err != sql.ErrNoRows {
+		http.Error(w, "Login is already exist", http.StatusConflict)
 		return
 	}
 
-	err = user.HashPassword()
-	if err != nil {
-		http.Error(w, "Ошибка хэширования пароля", http.StatusInternalServerError)
+	err = config.PostgresDB.QueryRow("SELECT user_id FROM Users WHERE mail = $1", user.Mail).Scan(&existingID)
+	if err != sql.ErrNoRows {
+		http.Error(w, "Mail is already exist", http.StatusConflict)
 		return
 	}
 
-	res, err := collection.InsertOne(context.TODO(), user)
-	if err != nil {
-		http.Error(w, "Ошибка сохранения пользователя", http.StatusInternalServerError)
+	if err := user.HashPassword(); err != nil {
+		http.Error(w, "Hash password error", http.StatusInternalServerError)
 		return
 	}
 
-	userID := res.InsertedID.(primitive.ObjectID).Hex()
+	var userID int
+	err = config.PostgresDB.QueryRow(`
+		INSERT INTO Users (login, password, mail, name, surname)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING user_id
+	`, user.Login, user.Password, user.Mail, user.Name, user.Surname).Scan(&userID)
+
+	if err != nil {
+		http.Error(w, "Create new user error", http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{
-		"message": "Регистрация успешна",
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "User created successfully",
 		"user_id": userID,
 	})
 }
 
 func LoginUser(w http.ResponseWriter, r *http.Request) {
 	var creds models.User
-	err := json.NewDecoder(r.Body).Decode(&creds)
-	if err != nil {
-		http.Error(w, "Ошибка декодирования данных", http.StatusBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
+		http.Error(w, "JSON decode error", http.StatusBadRequest)
 		return
 	}
 
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(os.Getenv("MONGO_URI")))
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer client.Disconnect(context.TODO())
+	var userID int
+	var hashedPassword string
+	err := config.PostgresDB.QueryRow(`
+		SELECT user_id, password FROM Users WHERE login = $1
+	`, creds.Login).Scan(&userID, &hashedPassword)
 
-	collection := client.Database("filestorage").Collection("users")
-
-	var user models.User
-	err = collection.FindOne(context.TODO(), bson.M{"email": creds.Email}).Decode(&user)
-	if err != nil {
-		http.Error(w, "Неверный email или пароль", http.StatusUnauthorized)
+	if err == sql.ErrNoRows || !models.CheckPasswordHash(creds.Password, hashedPassword) {
+		http.Error(w, "Incorrect login or password", http.StatusUnauthorized)
 		return
-	}
-
-	if !user.CheckPassword(creds.Password) {
-		http.Error(w, "Неверный email или пароль", http.StatusUnauthorized)
+	} else if err != nil {
+		http.Error(w, "Login error", http.StatusInternalServerError)
 		return
 	}
 
 	expirationTime := time.Now().Add(24 * time.Hour)
 	claims := &CustomClaims{
-		UserID: user.ID.Hex(),
+		UserID: userID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -107,9 +96,11 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(jwtKey)
 	if err != nil {
-		http.Error(w, "Ошибка генерации токена", http.StatusInternalServerError)
+		http.Error(w, "Token generation error", http.StatusInternalServerError)
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]string{"token": tokenString})
+	json.NewEncoder(w).Encode(map[string]string{
+		"token": tokenString,
+	})
 }

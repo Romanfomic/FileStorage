@@ -1,29 +1,21 @@
 # Используем официальный образ Go
 FROM golang:1.24-alpine as builder
 
-# Устанавливаем рабочую директорию внутри контейнера
 WORKDIR /app
-
-# Копируем все исходные файлы из локальной папки в контейнер
 COPY . .
-
-# Устанавливаем зависимости (если используете Go Modules)
 RUN go mod tidy
-
-# Собираем бинарный файл
 RUN go build -o backend .
 
-# Теперь находимся в альпийском образе с более лёгким окружением
+# Финальный образ
 FROM alpine:latest
 
-# Устанавливаем необходимые библиотеки (если требуется)
-RUN apk --no-cache add ca-certificates
+RUN apk --no-cache add ca-certificates netcat-openbsd
 
-# Копируем собранный бинарный файл из предыдущего этапа
 COPY --from=builder /app/backend /usr/local/bin/backend
+COPY wait-for-it.sh /wait-for-it.sh
+RUN chmod +x /wait-for-it.sh
 
-# Открываем порт, который будет слушать ваше приложение
 EXPOSE 8080
 
-# Команда запуска приложения
-CMD ["backend"]
+# Изменим команду запуска: ждем PostgreSQL перед стартом backend
+CMD ["/wait-for-it.sh", "postgres", "5432", "--", "backend"]
