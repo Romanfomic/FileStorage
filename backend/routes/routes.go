@@ -21,6 +21,8 @@ func RegisterRoutes() *mux.Router {
 	// files
 	protected.HandleFunc("/files/upload", handlers.UploadFile).Methods("POST")
 	protected.HandleFunc("/files/{file_id}", handlers.DownloadFile).Methods("GET")
+	protected.HandleFunc("/files/{file_id}", handlers.UpdateFile).Methods("PUT")
+	protected.HandleFunc("/files/{file_id}", handlers.DeleteFile).Methods("DELETE")
 	protected.HandleFunc("/filelist", handlers.GetUserFiles).Methods("GET")
 
 	return router
