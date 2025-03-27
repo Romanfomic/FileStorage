@@ -1,4 +1,3 @@
-# Используем официальный образ Go
 FROM golang:1.24-alpine as builder
 
 WORKDIR /app
@@ -6,7 +5,6 @@ COPY . .
 RUN go mod tidy
 RUN go build -o backend .
 
-# Финальный образ
 FROM alpine:latest
 
 RUN apk --no-cache add ca-certificates netcat-openbsd
@@ -17,5 +15,5 @@ RUN chmod +x /wait-for-it.sh
 
 EXPOSE 8080
 
-# Изменим команду запуска: ждем PostgreSQL перед стартом backend
+# ждем PostgreSQL перед стартом backend
 CMD ["/wait-for-it.sh", "postgres", "5432", "--", "backend"]

@@ -44,12 +44,13 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userType := "user"
 	var userID int
 	err = config.PostgresDB.QueryRow(`
-		INSERT INTO Users (login, password, mail, name, surname)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO Users (login, password, mail, name, surname, type)
+		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING user_id
-	`, user.Login, user.Password, user.Mail, user.Name, user.Surname).Scan(&userID)
+	`, user.Login, user.Password, user.Mail, user.Name, user.Surname, userType).Scan(&userID)
 
 	if err != nil {
 		http.Error(w, "Create new user error", http.StatusInternalServerError)

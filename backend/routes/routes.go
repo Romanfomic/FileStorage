@@ -23,7 +23,20 @@ func RegisterRoutes() *mux.Router {
 	protected.HandleFunc("/files/{file_id}", handlers.DownloadFile).Methods("GET")
 	protected.HandleFunc("/files/{file_id}", handlers.UpdateFile).Methods("PUT")
 	protected.HandleFunc("/files/{file_id}", handlers.DeleteFile).Methods("DELETE")
-	protected.HandleFunc("/filelist", handlers.GetUserFiles).Methods("GET")
+	protected.HandleFunc("/files", handlers.GetUserFiles).Methods("GET")
+
+	// roles
+	protected.HandleFunc("/roles", middleware.RequirePermission("manage_roles", handlers.CreateRole)).Methods("POST")
+	protected.HandleFunc("/roles/{id}", middleware.RequirePermission("manage_roles", handlers.GetRole)).Methods("GET")
+	protected.HandleFunc("/roles", middleware.RequirePermission("manage_roles", handlers.GetRoles)).Methods("GET")
+	protected.HandleFunc("/roles/{id}", middleware.RequirePermission("manage_roles", handlers.UpdateRole)).Methods("PUT")
+	protected.HandleFunc("/roles", middleware.RequirePermission("manage_roles", handlers.DeleteRole)).Methods("DELETE")
+
+	// groups
+	protected.HandleFunc("/groups", middleware.RequirePermission("manage_groups", handlers.CreateGroup)).Methods("POST")
+	protected.HandleFunc("/groups", middleware.RequirePermission("manage_groups", handlers.GetGroups)).Methods("GET")
+	protected.HandleFunc("/groups/{id}", middleware.RequirePermission("manage_groups", handlers.UpdateGroup)).Methods("PUT")
+	protected.HandleFunc("/groups/{id}", middleware.RequirePermission("manage_groups", handlers.DeleteGroup)).Methods("DELETE")
 
 	return router
 }
