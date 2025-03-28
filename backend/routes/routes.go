@@ -38,5 +38,12 @@ func RegisterRoutes() *mux.Router {
 	protected.HandleFunc("/groups/{id}", middleware.RequirePermission("manage_groups", handlers.UpdateGroup)).Methods("PUT")
 	protected.HandleFunc("/groups/{id}", middleware.RequirePermission("manage_groups", handlers.DeleteGroup)).Methods("DELETE")
 
+	// users
+	protected.HandleFunc("/users", handlers.CreateUser).Methods("POST")
+	protected.HandleFunc("/users/{id}", handlers.GetUser).Methods("GET")
+	protected.HandleFunc("/users", handlers.GetUsers).Methods("GET")
+	protected.HandleFunc("/users/{id}", handlers.UpdateUser).Methods("PUT")
+	protected.HandleFunc("/users/{id}", handlers.DeleteUser).Methods("DELETE")
+
 	return router
 }

@@ -5,12 +5,15 @@ import (
 )
 
 type User struct {
-	ID       int    `json:"id"`
-	Login    string `json:"login"`
-	Password string `json:"password"`
+	ID       int    `json:"user_id"`
 	Mail     string `json:"mail"`
+	Login    string `json:"login"`
+	Password string `json:"password,omitempty"`
 	Name     string `json:"name"`
 	Surname  string `json:"surname"`
+	Type     string `json:"type"`
+	RoleID   *int   `json:"role_id"`
+	GroupID  *int   `json:"group_id"`
 }
 
 func (u *User) HashPassword() error {
