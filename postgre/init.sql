@@ -68,6 +68,13 @@ CREATE TABLE File_Users (
     PRIMARY KEY (file_id, user_id)
 );
 
+CREATE TABLE File_Groups (
+    file_id INTEGER REFERENCES Files(file_id) ON DELETE CASCADE,
+    group_id INTEGER REFERENCES Groups(group_id) ON DELETE CASCADE,
+    access_id INTEGER REFERENCES Access(access_id),
+    PRIMARY KEY (file_id, group_id)
+);
+
 INSERT INTO Permissions (name, description) VALUES
 ('manage_roles', 'Управление ролями'),
 ('manage_groups', 'Управление группами'),

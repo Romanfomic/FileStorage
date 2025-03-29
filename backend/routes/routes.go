@@ -45,5 +45,13 @@ func RegisterRoutes() *mux.Router {
 	protected.HandleFunc("/users/{id}", handlers.UpdateUser).Methods("PUT")
 	protected.HandleFunc("/users/{id}", handlers.DeleteUser).Methods("DELETE")
 
+	// sharing
+	protected.HandleFunc("/files/{file_id}/share/user", handlers.ShareFileWithUser).Methods("POST")
+	protected.HandleFunc("/files/{file_id}/share/group", handlers.ShareFileWithGroup).Methods("POST")
+	protected.HandleFunc("/files/{file_id}/permissions", handlers.GetFilePermissions).Methods("GET")
+	protected.HandleFunc("/shared-files", handlers.GetSharedFiles).Methods("GET")
+	protected.HandleFunc("/files/{file_id}/share/user/{user_id}", handlers.RevokeUserAccess).Methods("DELETE")
+	protected.HandleFunc("/files/{file_id}/share/group/{group_id}", handlers.RevokeGroupAccess).Methods("DELETE")
+
 	return router
 }
