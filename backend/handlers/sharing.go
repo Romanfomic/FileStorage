@@ -10,6 +10,10 @@ import (
 	"github.com/gorilla/mux"
 )
 
+/*
+user_id: int
+access_id: int
+*/
 func ShareFileWithUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	fileID := vars["file_id"]
@@ -35,6 +39,10 @@ func ShareFileWithUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
+/*
+group_id: int
+access_id: int
+*/
 func ShareFileWithGroup(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	fileID := vars["file_id"]

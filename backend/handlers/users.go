@@ -14,6 +14,13 @@ import (
 	"github.com/gorilla/mux"
 )
 
+/*
+login: string
+password: string
+mail: string
+name: string
+surname: string
+*/
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
@@ -130,6 +137,13 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(users)
 }
 
+/*
+login: string
+password: string
+mail: string
+name: string
+surname: string
+*/
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userID := vars["id"]

@@ -15,6 +15,10 @@ type Group struct {
 	Description string `json:"description"`
 }
 
+/*
+name: string
+description: string
+*/
 func CreateGroup(w http.ResponseWriter, r *http.Request) {
 	var group Group
 	if err := json.NewDecoder(r.Body).Decode(&group); err != nil {
@@ -55,6 +59,10 @@ func GetGroups(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(groups)
 }
 
+/*
+name: string
+description: string
+*/
 func UpdateGroup(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	groupID := vars["id"]

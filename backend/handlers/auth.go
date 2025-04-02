@@ -19,6 +19,13 @@ type CustomClaims struct {
 	jwt.RegisteredClaims
 }
 
+/*
+login: string
+password: string
+mail: string
+name: string
+surname: string
+*/
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
@@ -64,6 +71,10 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+/*
+login: string
+password: string
+*/
 func LoginUser(w http.ResponseWriter, r *http.Request) {
 	var creds models.User
 	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {

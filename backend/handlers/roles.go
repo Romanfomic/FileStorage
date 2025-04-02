@@ -17,6 +17,10 @@ type Role struct {
 	Permissions []int  `json:"permissions"`
 }
 
+/*
+name: string
+description: string
+*/
 func CreateRole(w http.ResponseWriter, r *http.Request) {
 	var role Role
 	if err := json.NewDecoder(r.Body).Decode(&role); err != nil {
@@ -134,6 +138,11 @@ func GetRole(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+/*
+name: string
+description: string
+permissions: int[]
+*/
 func UpdateRole(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	roleID := vars["id"]

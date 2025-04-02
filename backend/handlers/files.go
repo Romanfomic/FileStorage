@@ -20,6 +20,9 @@ import (
 	"backend/models"
 )
 
+/*
+form-data file: file
+*/
 func UploadFile(w http.ResponseWriter, r *http.Request) {
 	r.ParseMultipartForm(50 << 20)
 
@@ -223,6 +226,9 @@ func GetUserFiles(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+/*
+form-data file: file | name: string
+*/
 func UpdateFile(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	fileID := params["file_id"]
