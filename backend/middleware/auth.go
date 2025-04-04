@@ -16,7 +16,9 @@ type contextKey string
 const UserIDKey contextKey = "user_id"
 
 type CustomClaims struct {
-	UserID int `json:"user_id"`
+	UserID      int      `json:"user_id"`
+	Type        string   `json:"type"`
+	Permissions []string `json:"permissions"`
 	jwt.RegisteredClaims
 }
 

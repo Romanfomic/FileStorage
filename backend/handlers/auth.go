@@ -15,7 +15,9 @@ import (
 var jwtKey = []byte("secret_key")
 
 type CustomClaims struct {
-	UserID int `json:"user_id"`
+	UserID      int      `json:"user_id"`
+	Type        string   `json:"type"`
+	Permissions []string `json:"permissions"`
 	jwt.RegisteredClaims
 }
 
@@ -83,10 +85,35 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var userID int
-	var hashedPassword string
+	var hashedPassword, userType string
+	var roleID int
+
 	err := config.PostgresDB.QueryRow(`
-		SELECT user_id, password FROM Users WHERE login = $1
-	`, creds.Login).Scan(&userID, &hashedPassword)
+		SELECT user_id, password, type, role_id FROM Users WHERE login = $1
+	`, creds.Login).Scan(&userID, &hashedPassword, &userType, &roleID)
+
+	rows, err := config.PostgresDB.Query(`
+		SELECT p.name
+		FROM Permissions p
+		INNER JOIN Role_Permissions rp ON p.permission_id = rp.permission_id
+		WHERE rp.role_id = $1
+	`, roleID)
+
+	if err != nil {
+		http.Error(w, "Failed to load permissions", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var permissions []string
+	for rows.Next() {
+		var perm string
+		if err := rows.Scan(&perm); err != nil {
+			http.Error(w, "Permission scan error", http.StatusInternalServerError)
+			return
+		}
+		permissions = append(permissions, perm)
+	}
 
 	if err == sql.ErrNoRows || !models.CheckPasswordHash(creds.Password, hashedPassword) {
 		http.Error(w, "Incorrect login or password", http.StatusUnauthorized)
@@ -98,7 +125,9 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 
 	expirationTime := time.Now().Add(24 * time.Hour)
 	claims := &CustomClaims{
-		UserID: userID,
+		UserID:      userID,
+		Type:        userType,
+		Permissions: permissions,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
