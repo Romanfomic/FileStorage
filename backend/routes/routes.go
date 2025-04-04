@@ -1,13 +1,15 @@
 package routes
 
 import (
+	"net/http"
+
 	"github.com/gorilla/mux"
 
 	"backend/handlers"
 	"backend/middleware"
 )
 
-func RegisterRoutes() *mux.Router {
+func RegisterRoutes() http.Handler {
 	router := mux.NewRouter()
 
 	// auth
@@ -53,5 +55,5 @@ func RegisterRoutes() *mux.Router {
 	protected.HandleFunc("/files/{file_id}/share/user/{user_id}", handlers.RevokeUserAccess).Methods("DELETE")
 	protected.HandleFunc("/files/{file_id}/share/group/{group_id}", handlers.RevokeGroupAccess).Methods("DELETE")
 
-	return router
+	return middleware.CORSMiddleware(router)
 }
