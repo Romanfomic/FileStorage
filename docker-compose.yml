@@ -40,6 +40,16 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./postgre/init.sql:/docker-entrypoint-initdb.d/init.sql
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+
 volumes:
   mongo_data:
   postgres_data:
