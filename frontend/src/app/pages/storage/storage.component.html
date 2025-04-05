@@ -1,0 +1,13 @@
+<ng-container *ngIf="load$ | async"></ng-container>
+
+<div class="storage-container">
+    <h2>Мои файлы</h2>
+
+    <div *ngIf="files.length; else noFiles" class="grid-view">
+        <app-storage-item *ngFor="let file of files" [file]="file"></app-storage-item>
+    </div>
+
+    <ng-template #noFiles>
+        <p>Файлов пока нет.</p>
+    </ng-template>
+</div>

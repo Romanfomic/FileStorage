@@ -34,7 +34,7 @@ export class AuthComponent {
         this.authService.login({login, password}).subscribe({
             next: (res) => {
                 localStorage.setItem('token', res.token);
-                this.router.navigate(['/dashboard']);
+                this.router.navigate(['/storage']);
             },
             error: () => {
                 this.errorMessage = 'Неверный логин или пароль';
