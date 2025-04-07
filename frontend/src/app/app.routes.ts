@@ -7,10 +7,6 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/auth/auth.component').then((c) => c.AuthComponent),
     },
     {
-        path: 'storage',
-        loadComponent: () => import('./pages/storage/storage.component').then((m) => m.StorageComponent),
-    },
-    {
         path: '',
         component: WrapComponent,
         children: [
@@ -19,5 +15,9 @@ export const routes: Routes = [
                 loadComponent: () => import('./pages/storage/storage.component').then((m) => m.StorageComponent),
             },
         ]
+    },
+    {
+        path: '**',
+        redirectTo: 'storage'
     }
 ];

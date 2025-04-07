@@ -13,4 +13,14 @@ export class FileService {
     getUserFiles(): Observable<FileMetadata[]> {
         return this.http.get<FileMetadata[]>(this.baseUrl);
     }
+
+    uploadFile(formData: FormData): Observable<any> {
+        return this.http.post(`${this.baseUrl}/upload`, formData, {
+            responseType: 'text',
+        });
+    }
+
+    deleteFile(fileId: number): Observable<any> {
+        return this.http.delete(`${this.baseUrl}/${fileId}`);
+    }    
 }

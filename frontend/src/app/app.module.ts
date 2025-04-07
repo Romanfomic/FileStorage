@@ -5,6 +5,9 @@ import { RouterModule } from '@angular/router';
 import { routes } from './app.routes';
 import { BrowserModule } from '@angular/platform-browser';
 import { AuthInterceptor } from './interceptors/auth.interceptor';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { providePrimeNG } from 'primeng/config';
+import Aura from '@primeng/themes/aura';
 
 @NgModule({
     declarations: [AppComponent],
@@ -14,7 +17,17 @@ import { AuthInterceptor } from './interceptors/auth.interceptor';
             provide: HTTP_INTERCEPTORS,
             useClass: AuthInterceptor,
             multi: true,
-        }
+        },
+        provideAnimationsAsync(),
+        providePrimeNG({
+            theme: {
+                preset: Aura,
+                options: {
+                    cssLayer: true,
+                    darkModeSelector: '.theme-dark',
+                },
+            },
+        }),
     ],
     bootstrap: [AppComponent],
     imports: [

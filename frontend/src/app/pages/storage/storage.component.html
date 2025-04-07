@@ -1,13 +1,69 @@
 <ng-container *ngIf="load$ | async"></ng-container>
+<ng-container *ngIf="action$ | async"></ng-container>
 
 <div class="storage-container">
+    <div class="actions">
+        <label class="upload-btn">
+            Загрузить файл
+            <input type="file" (change)="onFileSelected($event)" hidden />
+        </label>
+    </div>
     <h2>Мои файлы</h2>
 
     <div *ngIf="files.length; else noFiles" class="grid-view">
-        <app-storage-item *ngFor="let file of files" [file]="file"></app-storage-item>
+        <app-storage-item 
+            *ngFor="let file of files" 
+            [file]="file"
+            (contextmenu)="onRightClick($event, file)"
+        ></app-storage-item>
     </div>
 
     <ng-template #noFiles>
         <p>Файлов пока нет.</p>
     </ng-template>
 </div>
+
+<p-dialog
+    [(visible)]="showDialog"
+    [dismissableMask]="true"
+    [modal]="true"
+    [style]="{
+        position: 'fixed',
+        left: contextMenuPosition.x,
+        top: contextMenuPosition.y,
+        width: '200px',
+        padding: 0
+    }"
+    [contentStyle]="{ padding: 0 }"
+    [draggable]="false"
+    [resizable]="false"
+    [baseZIndex]="10000"
+>
+    <ng-template pTemplate="header">
+        <div class="dialog-title" [title]="selectedFile?.name">
+            {{ selectedFile?.name }}
+        </div>
+    </ng-template>
+    <ul class="context-menu">
+        <li (click)="viewInfo(selectedFile!)">Подробная информация</li>
+        <li class="danger" (click)="deleteFile(selectedFile!)">Удалить</li>
+    </ul>
+</p-dialog>
+
+<p-dialog
+    [(visible)]="showInfoDialog"
+    [dismissableMask]="true"
+    [modal]="true"
+    [header]="selectedFile?.name"
+    [style]="{ width: '400px' }"
+>
+    <ng-template pTemplate="content">
+        <div *ngIf="selectedFile">
+            <p><strong>Создан:</strong> {{ selectedFile.create_date | date: 'dd.MM.yyyy, HH:mm'}}</p>
+            <p><strong>Изменён:</strong> {{ selectedFile.edit_date | date: 'dd.MM.yyyy, HH:mm'}}</p>
+            <p *ngIf="fileOwner">
+                <strong>Владелец:</strong> {{ fileOwner.name }} {{ fileOwner.surname }} ({{ fileOwner.login }})
+            </p>
+        </div>
+    </ng-template>
+</p-dialog>
