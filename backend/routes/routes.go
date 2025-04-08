@@ -34,6 +34,10 @@ func RegisterRoutes() http.Handler {
 	protected.HandleFunc("/roles/{id}", middleware.RequirePermission("manage_roles", handlers.UpdateRole)).Methods("PUT")
 	protected.HandleFunc("/roles", middleware.RequirePermission("manage_roles", handlers.DeleteRole)).Methods("DELETE")
 
+	// permissions
+	protected.HandleFunc("/permissions", middleware.RequirePermission("manage_roles", handlers.GetPermissions)).Methods("GET")
+	protected.HandleFunc("/permissions/{id}", middleware.RequirePermission("manage_roles", handlers.GetPermission)).Methods("GET")
+
 	// groups
 	protected.HandleFunc("/groups", middleware.RequirePermission("manage_groups", handlers.CreateGroup)).Methods("POST")
 	protected.HandleFunc("/groups", middleware.RequirePermission("manage_groups", handlers.GetGroups)).Methods("GET")
