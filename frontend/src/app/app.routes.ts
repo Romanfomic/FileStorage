@@ -14,6 +14,10 @@ export const routes: Routes = [
                 path: 'storage',
                 loadComponent: () => import('./pages/storage/storage.component').then((m) => m.StorageComponent),
             },
+            {
+                path: 'users',
+                loadComponent: () => import('./pages/users/users.component').then((m) => m.UsersComponent),
+            },
         ]
     },
     {
