@@ -18,6 +18,14 @@ export const routes: Routes = [
                 path: 'users',
                 loadComponent: () => import('./pages/users/users.component').then((m) => m.UsersComponent),
             },
+            {
+                path: 'groups',
+                loadComponent: () => import('./pages/groups/groups.component').then((m) => m.GroupsComponent),
+            },
+            {
+                path: 'roles',
+                loadComponent: () => import('./pages/roles/roles.component').then((m) => m.RolesComponent),
+            },
         ]
     },
     {

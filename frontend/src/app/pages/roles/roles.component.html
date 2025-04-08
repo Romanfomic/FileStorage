@@ -1,0 +1,76 @@
+<ng-container *ngIf="load$ | async"></ng-container>
+<ng-container *ngIf="loadPermissions$ | async"></ng-container>
+
+<div class="page-header">
+    <p-button label="Добавить роль" icon="pi pi-plus" (click)="openNew()"></p-button>
+</div>
+
+<p-table [value]="roles" selectionMode="single" [(selection)]="selectedRole" (rowSelect)="editRole(selectedRole!)">
+    <ng-template pTemplate="header">
+        <tr>
+            <th>ID</th>
+            <th>Название</th>
+            <th>Права</th>
+            <th>Действия</th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-role>
+        <tr>
+            <td>{{ role.role_id }}</td>
+            <td>{{ role.name }}</td>
+            <td>
+                <ul>
+                    <li *ngFor="let permId of role.permissions">
+                        {{ getPermissionName(permId) }}
+                    </li>
+                </ul>
+            </td>
+            <td>
+                <div class="actions">
+                    <p-button icon="pi pi-pencil" (click)="editRole(role)"></p-button>
+                    <p-button icon="pi pi-trash" (click)="deleteRole(role)"></p-button>
+                </div>
+            </td>
+        </tr>
+    </ng-template>
+</p-table>
+
+<p-dialog [(visible)]="displayDialog" [modal]="true" [closable]="false">
+    <ng-template pTemplate="header">
+        <h3>{{ isNewRole ? 'Создать роль' : 'Редактировать роль' }}</h3>
+    </ng-template>
+    <ng-template pTemplate="content">
+        <form [formGroup]="roleForm">
+            <div class="p-fluid">
+                <div class="p-field">
+                    <label for="name">Название</label>
+                    <input id="name" type="text" pInputText formControlName="name" />
+                </div>
+                <div class="p-field">
+                    <label for="description">Описание</label>
+                    <textarea id="description" pTextarea formControlName="description"></textarea>
+                </div>
+                <div class="p-field">
+                    <label for="permissions">Права</label>
+                    <div class="multiselect-wrapper">
+                        <p-multiSelect
+                            id="permissions"
+                            appendTo="body"
+                            optionLabel="name"
+                            optionValue="permission_id"
+                            formControlName="permissions"
+                            display="chip"
+                            placeholder="Выберите права"
+                            [options]="permissions"
+                            >
+                        </p-multiSelect>
+                    </div>
+                </div>                
+            </div>
+        </form>
+    </ng-template>
+    <ng-template pTemplate="footer">
+        <p-button label="Сохранить" (click)="saveRole()" [disabled]="roleForm.invalid"></p-button>
+        <p-button label="Отмена" (click)="displayDialog = false" class="p-button-secondary"></p-button>
+    </ng-template>
+</p-dialog>

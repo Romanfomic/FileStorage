@@ -26,6 +26,6 @@ export class RoleService {
     }
 
     deleteRole(id: number): Observable<void> {
-        return this.http.delete<void>(this.baseUrl); // Удаление по телу запроса (см. бэк)
+        return this.http.delete<void>(this.baseUrl);
     }
 }

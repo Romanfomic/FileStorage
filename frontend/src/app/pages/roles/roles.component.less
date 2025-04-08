@@ -1,0 +1,103 @@
+:host {
+    display: block;
+    padding: 2rem;
+    background-color: #f9f9f9;
+}
+
+button[pButton] {
+    margin-right: 0.5rem;
+}
+
+p-table {
+    margin-top: 1rem;
+
+    ::ng-deep .p-datatable {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        background-color: white;
+    }
+
+    ::ng-deep .p-datatable-thead > tr > th {
+        background-color: #f0f0f0;
+        color: #333;
+        padding: 1rem;
+        font-weight: 600;
+        text-align: left;
+    }
+
+    ::ng-deep .p-datatable-tbody > tr > td {
+        padding: 1rem;
+    }
+
+    ::ng-deep .p-datatable-tbody > tr:hover {
+        background-color: #f6f6f6;
+        cursor: pointer;
+    }
+
+    ::ng-deep .p-button {
+        width: 2rem;
+        height: 2rem;
+    }
+
+    .actions {
+        display: flex;
+        gap: 10px;
+    }
+}
+
+p-dropdown {
+    width: 100%;
+}
+
+.p-field {
+    margin-bottom: 1rem;
+
+    label {
+        font-weight: 500;
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+
+    input {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+    }
+}
+
+.actions-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+
+    h2 {
+        margin: 0;
+    }
+
+    button {
+        margin-left: auto;
+    }
+}
+
+textarea {
+    width: 100%;
+}
+
+.multiselect-wrapper {
+    width: 300px;
+}
+
+::ng-deep .multiselect-wrapper .p-multiselect {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  ::ng-deep .p-multiselect-token {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
