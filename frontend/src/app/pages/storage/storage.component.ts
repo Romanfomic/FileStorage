@@ -8,11 +8,12 @@ import { StorageItemComponent } from '../../components/storage-item/storage-item
 import { DialogModule } from 'primeng/dialog';
 import { UserService } from '../../services/user.service';
 import { User } from '../../interfaces/user';
+import { FileUploadModule } from 'primeng/fileupload';
 
 @Component({
     selector: 'app-storage',
     standalone: true,
-    imports: [NgFor, AsyncPipe, CommonModule, StorageItemComponent, DialogModule],
+    imports: [NgFor, AsyncPipe, CommonModule, StorageItemComponent, DialogModule, FileUploadModule],
     templateUrl: './storage.component.html',
     styleUrl: './storage.component.less',
 })
@@ -37,24 +38,23 @@ export class StorageComponent {
     showInfoDialog = false;
     contextMenuPosition = { x: '0px', y: '0px' };
 
-    onFileSelected(event: Event) {
-        const fileInput = event.target as HTMLInputElement;
-        const file = fileInput.files?.[0];
+    onFileSelected(event: { files: File[] }) {
+        const file = event.files?.[0];
         if (!file) return;
-    
+
         const formData = new FormData();
         formData.append('file', file);
 
         this.action$ = this.fileService.uploadFile(formData).pipe(
             tap((value) => {
-                console.log(value)
-                this.refreshFiles()
+                console.log(value);
+                this.refreshFiles();
             }),
             catchError((error) => {
-                console.error('Upload error', error)
+                console.error('Upload error', error);
                 return EMPTY;
-            }),
-        )
+            })
+        );
     }
     
     refreshFiles() {

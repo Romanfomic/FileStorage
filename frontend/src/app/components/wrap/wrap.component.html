@@ -1,2 +1,22 @@
-<p>wrap works!</p>
-<router-outlet></router-outlet>
+<div class="layout">
+    <aside class="sidebar">
+        <h2 class="logo">FileStorage</h2>
+        <ul>
+        <li (click)="navigate('/storage')">Хранилище</li>
+        <li (click)="navigate('/users')">Пользователи</li>
+        <li (click)="navigate('/groups')">Группы</li>
+        <li (click)="navigate('/roles')">Роли</li>
+        </ul>
+    </aside>
+
+    <main class="content">
+        <header class="header">
+        <h1>{{ getTitle() }}</h1>
+        <button pButton type="button" icon="pi pi-sign-out" label="Выход" (click)="logout()" class="p-button-danger p-button-sm"></button>
+        </header>
+
+        <section class="router-wrapper">
+        <router-outlet></router-outlet>
+        </section>
+    </main>
+</div>

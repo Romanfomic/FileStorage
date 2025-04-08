@@ -3,10 +3,17 @@
 
 <div class="storage-container">
     <div class="actions">
-        <label class="upload-btn">
-            Загрузить файл
-            <input type="file" (change)="onFileSelected($event)" hidden />
-        </label>
+        <p-fileUpload
+                name="file"
+                customUpload="true"
+                (uploadHandler)="onFileSelected($event)"
+                chooseLabel="Загрузить файл"
+                mode="basic"
+                [auto]="true"
+                [maxFileSize]="10485760"
+                [showUploadButton]="false"
+                [showCancelButton]="false"
+            />
     </div>
     <h2>Мои файлы</h2>
 
