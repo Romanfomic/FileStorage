@@ -26,6 +26,7 @@ export class WrapComponent {
       const route = this.router.url.split('/')[1];
       const titles: Record<string, string> = {
             storage: 'Хранилище',
+            shared: 'Доступные мне',
             users: 'Пользователи',
             roles: 'Роли',
             groups: 'Группы',

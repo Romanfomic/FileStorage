@@ -1,0 +1,57 @@
+<ng-container *ngIf="load$ | async"></ng-container>
+<ng-container *ngIf="loadUsers$ | async"></ng-container>
+<ng-container *ngIf="loadGroups$ | async"></ng-container>
+
+<p-dialog [(visible)]="visible" [modal]="true" [style]="{ width: '600px' }" (onHide)="cancel()">
+    <ng-template pTemplate="header">
+        <h3>Управление доступом: {{ file.name }}</h3>
+    </ng-template>
+
+    <ng-template pTemplate="content">
+        <div class="dialog-content-fixed">
+        <p-tabs value="0">
+            <p-tablist>
+            <p-tab value="0">Пользователи</p-tab>
+            <p-tab value="1">Группы</p-tab>
+            </p-tablist>
+
+            <!-- users -->
+            <p-tabpanel value="0">
+            <div class="access-list">
+                <div class="access-item" *ngFor="let user of allUsers">
+                <span class="access-label">{{ user.name }} {{ user.surname }} ({{ user.login }})</span>
+                <p-dropdown
+                    placeholder="Нет доступа"
+                    class="access-dropdown"
+                    appendTo="body"
+                    [options]="fullAccessOptions"
+                    [(ngModel)]="userAccessLevelMap[user.user_id!]"
+                ></p-dropdown>
+                </div>
+            </div>
+            </p-tabpanel>
+
+            <!-- groups -->
+            <p-tabpanel value="1">
+            <div class="access-list">
+                <div class="access-item" *ngFor="let group of allGroups">
+                <span class="access-label">{{ group.name }}</span>
+                <p-dropdown
+                    [options]="fullAccessOptions"
+                    [(ngModel)]="groupAccessLevelMap[group.group_id]"
+                    placeholder="Нет доступа"
+                    class="access-dropdown"
+                    appendTo="body"
+                ></p-dropdown>
+                </div>
+            </div>
+            </p-tabpanel>
+        </p-tabs>
+        </div>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+        <p-button label="Сохранить" (click)="save()" class="p-button-success"></p-button>
+        <p-button label="Отмена" (click)="cancel()" class="p-button-secondary"></p-button>
+    </ng-template>
+</p-dialog>

@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { WrapComponent } from './components/wrap/wrap.component';
+import { SharedStorageComponent } from './pages/shared-storage/shared-storage.component';
 
 export const routes: Routes = [
     {
@@ -11,8 +12,17 @@ export const routes: Routes = [
         component: WrapComponent,
         children: [
             {
+                path: '',
+                pathMatch: 'full',
+                redirectTo: 'storage'
+            },
+            {
                 path: 'storage',
                 loadComponent: () => import('./pages/storage/storage.component').then((m) => m.StorageComponent),
+            },
+            {
+                path: 'shared',
+                component: SharedStorageComponent
             },
             {
                 path: 'users',

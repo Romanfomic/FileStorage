@@ -65,23 +65,25 @@
                     <label for="role">Роль</label>
                     <p-dropdown
                         id="role"
-                        [options]="roles"
                         optionLabel="name"
                         optionValue="role_id"
                         formControlName="role_id"
-                        placeholder="Выберите роль">
-                    </p-dropdown>
+                        placeholder="Выберите роль"
+                        appendTo="body"
+                        [options]="roles"
+                    ></p-dropdown>
                 </div>
                 <div class="p-field">
                     <label for="group">Группа</label>
                     <p-dropdown
                         id="group"
-                        [options]="groups"
                         optionLabel="name"
                         optionValue="group_id"
                         formControlName="group_id"
-                        placeholder="Выберите группу">
-                    </p-dropdown>
+                        placeholder="Выберите группу"
+                        appendTo="body"
+                        [options]="groups"
+                    ></p-dropdown>
                 </div>
                 <div class="p-field">
                     <label for="mail">Email</label>

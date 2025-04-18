@@ -1,25 +1,36 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ViewChild } from '@angular/core';
 import { NgFor, AsyncPipe } from '@angular/common';
 import { FileService } from '../../services/file.service';
 import { CommonModule } from '@angular/common';
-import { catchError, EMPTY, Observable, tap } from 'rxjs';
+import { catchError, EMPTY, finalize, Observable, tap } from 'rxjs';
 import { FileMetadata } from '../../interfaces/fileData';
 import { StorageItemComponent } from '../../components/storage-item/storage-item.component';
 import { DialogModule } from 'primeng/dialog';
 import { UserService } from '../../services/user.service';
 import { User } from '../../interfaces/user';
 import { FileUploadModule } from 'primeng/fileupload';
+import { FileAccessDialogComponent } from "../../components/dialogs/file-access-dialog/file-access-dialog.component";
 
 @Component({
     selector: 'app-storage',
     standalone: true,
-    imports: [NgFor, AsyncPipe, CommonModule, StorageItemComponent, DialogModule, FileUploadModule],
+    imports: [
+    NgFor,
+    AsyncPipe,
+    CommonModule,
+    StorageItemComponent,
+    DialogModule,
+    FileUploadModule,
+    FileAccessDialogComponent
+],
     templateUrl: './storage.component.html',
     styleUrl: './storage.component.less',
 })
 export class StorageComponent {
     private fileService = inject(FileService);
     private userService = inject(UserService);
+
+    @ViewChild(FileAccessDialogComponent) accessDialog!: FileAccessDialogComponent;
 
     load$ = this.fileService.getUserFiles().pipe(
         tap((files) => {
@@ -73,6 +84,24 @@ export class StorageComponent {
         this.showDialog = true;
     }
 
+    downloadFile(file: FileMetadata) {
+        this.action$ = this.fileService.downloadFile(file.file_id).pipe(
+            tap((blob) => {
+                const link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download = file.name;
+                link.click();
+                window.URL.revokeObjectURL(link.href);
+            }),
+            catchError((error) => {
+                console.error('Download error', error);
+
+                return EMPTY;
+            }),
+            finalize(() => this.showDialog = false)
+        )
+    }
+
     viewInfo(file: FileMetadata) {
         this.selectedFile = file;
         this.showDialog = false;
@@ -85,6 +114,11 @@ export class StorageComponent {
                 return EMPTY;
             }),
         );
+    }
+
+    openShareDialog(file: FileMetadata) {
+        this.showDialog = false;
+        this.accessDialog.open(file);
     }
     
     deleteFile(file: FileMetadata) {

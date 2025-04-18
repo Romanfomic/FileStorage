@@ -1,21 +1,6 @@
 <ng-container *ngIf="load$ | async"></ng-container>
-<ng-container *ngIf="action$ | async"></ng-container>
 
 <div class="storage-container">
-    <div class="actions">
-        <p-fileUpload
-                name="file"
-                customUpload="true"
-                (uploadHandler)="onFileSelected($event)"
-                chooseLabel="Загрузить файл"
-                mode="basic"
-                [auto]="true"
-                [maxFileSize]="10485760"
-                [showUploadButton]="false"
-                [showCancelButton]="false"
-            />
-    </div>
-
     <div *ngIf="files.length; else noFiles" class="grid-view">
         <app-storage-item 
             *ngFor="let file of files" 
@@ -25,11 +10,11 @@
     </div>
 
     <ng-template #noFiles>
-        <p>Файлов пока нет.</p>
+        <p>Файлы, к которым у вас есть доступ, отсутствуют.</p>
     </ng-template>
 </div>
 
-<!-- context dialog -->
+<!-- context menu -->
 <p-dialog
     [(visible)]="showDialog"
     [dismissableMask]="true"
@@ -38,8 +23,7 @@
         position: 'fixed',
         left: contextMenuPosition.x,
         top: contextMenuPosition.y,
-        width: '200px',
-        padding: 0
+        width: '200px'
     }"
     [contentStyle]="{ padding: 0 }"
     [draggable]="false"
@@ -54,8 +38,6 @@
     <ul class="context-menu">
         <li (click)="downloadFile(selectedFile!)">Скачать</li>
         <li (click)="viewInfo(selectedFile!)">Подробная информация</li>
-        <li (click)="openShareDialog(selectedFile!)">Управление доступом</li>
-        <li class="danger" (click)="deleteFile(selectedFile!)">Удалить</li>
     </ul>
 </p-dialog>
 
@@ -77,6 +59,3 @@
         </div>
     </ng-template>
 </p-dialog>
-
-<!-- share dialog -->
-<app-file-access-dialog></app-file-access-dialog>
