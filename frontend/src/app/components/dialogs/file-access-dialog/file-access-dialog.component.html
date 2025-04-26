@@ -2,7 +2,7 @@
 <ng-container *ngIf="loadUsers$ | async"></ng-container>
 <ng-container *ngIf="loadGroups$ | async"></ng-container>
 
-<p-dialog [(visible)]="visible" [modal]="true" [style]="{ width: '600px' }" (onHide)="cancel()">
+<p-dialog [(visible)]="visible" [dismissableMask]="true" [modal]="true" [style]="{ width: '600px' }" (onHide)="cancel()">
     <ng-template pTemplate="header">
         <h3>Управление доступом: {{ file.name }}</h3>
     </ng-template>
@@ -51,7 +51,7 @@
     </ng-template>
 
     <ng-template pTemplate="footer">
-        <p-button label="Сохранить" (click)="save()" class="p-button-success"></p-button>
+        <p-button label="Сохранить" (click)="save()" class="p-button-secondary"></p-button>
         <p-button label="Отмена" (click)="cancel()" class="p-button-secondary"></p-button>
     </ng-template>
 </p-dialog>

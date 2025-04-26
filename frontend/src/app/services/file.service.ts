@@ -31,6 +31,10 @@ export class FileService {
         });
     }
 
+    renameFile(fileId: number, name: string): Observable<any> {
+        return this.http.put(`${this.baseUrl}/${fileId}`, { name });
+    }      
+
     getSharedFiles(): Observable<FileMetadata[]> {
         return this.http.get<FileMetadata[]>(`${this.sharedUrl}`);
     }

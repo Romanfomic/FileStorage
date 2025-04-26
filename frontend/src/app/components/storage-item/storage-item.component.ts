@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FileMetadata } from '../../interfaces/fileData';
 
@@ -11,6 +11,8 @@ import { FileMetadata } from '../../interfaces/fileData';
 })
 export class StorageItemComponent {
     @Input() file!: FileMetadata;
+
+    @Output() preview = new EventEmitter<FileMetadata>();
 
     get isFolder(): boolean {
         return this.file.type === 'folder';

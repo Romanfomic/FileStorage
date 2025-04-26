@@ -10,6 +10,9 @@ import { UserService } from '../../services/user.service';
 import { User } from '../../interfaces/user';
 import { FileUploadModule } from 'primeng/fileupload';
 import { FileAccessDialogComponent } from "../../components/dialogs/file-access-dialog/file-access-dialog.component";
+import { FormsModule } from '@angular/forms';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
 
 @Component({
     selector: 'app-storage',
@@ -21,7 +24,10 @@ import { FileAccessDialogComponent } from "../../components/dialogs/file-access-
     StorageItemComponent,
     DialogModule,
     FileUploadModule,
-    FileAccessDialogComponent
+    FileAccessDialogComponent,
+    FormsModule,
+    ButtonModule,
+    InputTextModule
 ],
     templateUrl: './storage.component.html',
     styleUrl: './storage.component.less',
@@ -47,7 +53,13 @@ export class StorageComponent {
 
     showDialog = false;
     showInfoDialog = false;
+    showPreviewDialog = false;
+    showRenameDialog = false;
+
+    newFileName = '';
     contextMenuPosition = { x: '0px', y: '0px' };
+    previewUrl: string | null = null;
+    previewType: 'image' | 'video' | 'audio' | null = null;
 
     onFileSelected(event: { files: File[] }) {
         const file = event.files?.[0];
@@ -116,6 +128,13 @@ export class StorageComponent {
         );
     }
 
+    openRenameDialog(file: FileMetadata) {
+        this.selectedFile = file;
+        this.newFileName = file.name;
+        this.showDialog = false;
+        this.showRenameDialog = true;
+    }
+
     openShareDialog(file: FileMetadata) {
         this.showDialog = false;
         this.accessDialog.open(file);
@@ -129,4 +148,66 @@ export class StorageComponent {
             })
         );
     }
+
+    renameFile() {
+        if (!this.selectedFile) return;
+    
+        this.action$ = this.fileService.renameFile(this.selectedFile.file_id, this.newFileName).pipe(
+            tap(() => {
+                this.refreshFiles();
+                this.showRenameDialog = false;
+            }),
+            catchError((error) => {
+                console.error('Rename error', error);
+                return EMPTY;
+            })
+        );
+    }
+      
+
+    previewFile(file: FileMetadata) {
+        this.action$ = this.fileService.downloadFile(file.file_id).pipe(
+            tap((blob) => {
+                const url = URL.createObjectURL(blob);
+
+                const ext = file.name.split('.').pop()?.toLowerCase();
+                if (ext) {
+                    if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext)) {
+                        this.previewType = 'image';
+                    } else if (['mp4', 'webm'].includes(ext)) {
+                        this.previewType = 'video';
+                    } else if (['mp3', 'wav', 'ogg'].includes(ext)) {
+                        this.previewType = 'audio';
+                    } else {
+                        this.previewType = null;
+                    }
+                }
+    
+                if (this.previewType) {
+                    this.previewUrl = url;
+                    this.showPreviewDialog = true;
+                } else {
+                    // download if cannot show preview
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = file.name;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                }
+            }),
+            catchError((error) => {
+                console.error('Preview error', error);
+                return EMPTY;
+            }),
+        )
+    }
+    
+    closePreview() {
+        this.showPreviewDialog = false;
+        if (this.previewUrl) {
+            URL.revokeObjectURL(this.previewUrl);
+        }
+        this.previewUrl = null;
+        this.previewType = null;
+    }    
 }

@@ -69,3 +69,44 @@
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     gap: 20px;
 }
+
+.rename-dialog {
+    input {
+        width: 100%;
+    }
+}
+
+.preview-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+}
+
+.preview-content {
+    position: relative;
+    width: 90%;
+    height: 90%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.preview-content img,
+.preview-content video {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+.preview-content audio {
+    width: 80%;
+    max-width: 600px;
+}

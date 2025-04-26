@@ -21,6 +21,7 @@
             *ngFor="let file of files" 
             [file]="file"
             (contextmenu)="onRightClick($event, file)"
+            (preview)="previewFile(file)"
         ></app-storage-item>
     </div>
 
@@ -52,11 +53,31 @@
         </div>
     </ng-template>
     <ul class="context-menu">
+        <li (click)="openRenameDialog(selectedFile!)">Переименовать</li>
         <li (click)="downloadFile(selectedFile!)">Скачать</li>
         <li (click)="viewInfo(selectedFile!)">Подробная информация</li>
         <li (click)="openShareDialog(selectedFile!)">Управление доступом</li>
         <li class="danger" (click)="deleteFile(selectedFile!)">Удалить</li>
     </ul>
+</p-dialog>
+
+<!-- rename dialog -->
+<p-dialog
+    [(visible)]="showRenameDialog"
+    [modal]="true"
+    [dismissableMask]="true"
+    [header]="'Переименовать файл'"
+    [style]="{ width: '300px' }"
+>
+    <ng-template pTemplate="content">
+        <div class="rename-dialog">
+            <input type="text" pInputText [(ngModel)]="newFileName" />
+        </div>
+    </ng-template>
+    <ng-template pTemplate="footer">
+        <p-button label="Отмена" class="p-button-secondary" (click)="showRenameDialog = false"></p-button>
+        <p-button label="Сохранить" class="p-button-secondary" (click)="renameFile()"></p-button>
+    </ng-template>
 </p-dialog>
 
 <!-- info dialog -->
@@ -77,6 +98,21 @@
         </div>
     </ng-template>
 </p-dialog>
+
+<!-- media preview -->
+<div 
+    class="preview-overlay" 
+    *ngIf="showPreviewDialog" 
+    (click)="closePreview()"
+>
+    <div class="preview-content">
+        <ng-container *ngIf="previewUrl && previewType" (click)="$event.stopPropagation()">
+            <img *ngIf="previewType === 'image'" [src]="previewUrl" alt="preview" />
+            <video *ngIf="previewType === 'video'" [src]="previewUrl" controls></video>
+            <audio *ngIf="previewType === 'audio'" [src]="previewUrl" controls></audio>
+        </ng-container>
+    </div>
+</div>
 
 <!-- share dialog -->
 <app-file-access-dialog></app-file-access-dialog>
