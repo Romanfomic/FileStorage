@@ -50,9 +50,7 @@ CREATE TABLE FileVersions (
 CREATE TABLE Files (
     file_id SERIAL PRIMARY KEY,
     mongo_file_id TEXT,
-    group_id INTEGER REFERENCES Groups(group_id),
     owner_id INTEGER REFERENCES Users(user_id),
-    access_id INTEGER REFERENCES Access(access_id),
     version_id INTEGER REFERENCES FileVersions(version_id),
     type VARCHAR(50),
     name TEXT,
