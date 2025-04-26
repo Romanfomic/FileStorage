@@ -7,7 +7,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
+	"path/filepath"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson"
@@ -24,17 +25,10 @@ import (
 form-data file: file
 */
 func UploadFile(w http.ResponseWriter, r *http.Request) {
-	r.ParseMultipartForm(50 << 20)
-
-	vars := mux.Vars(r)
-	full_path, ok := vars["full_path"]
-	if !ok || full_path == "" {
-		full_path = "/"
-	}
-
-	fileType, ok := vars["type"]
-	if !ok || fileType == "" {
-		fileType = "file"
+	err := r.ParseMultipartForm(50 << 20)
+	if err != nil {
+		http.Error(w, "Error parsing form", http.StatusBadRequest)
+		return
 	}
 
 	file, header, err := r.FormFile("file")
@@ -50,6 +44,16 @@ func UploadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fullPath := r.FormValue("full_path")
+	if fullPath == "" {
+		fullPath = "/"
+	}
+
+	fileType := r.FormValue("type")
+	if fileType == "" {
+		fileType = "file"
+	}
+
 	bucket, err := gridfs.NewBucket(config.DB)
 	if err != nil {
 		http.Error(w, "GridFS initialization error", http.StatusInternalServerError)
@@ -58,9 +62,7 @@ func UploadFile(w http.ResponseWriter, r *http.Request) {
 
 	uploadStream, err := bucket.OpenUploadStream(
 		header.Filename,
-		options.GridFSUpload().SetMetadata(bson.M{
-			"owner_id": userID,
-		}),
+		options.GridFSUpload().SetMetadata(bson.M{"owner_id": userID}),
 	)
 	if err != nil {
 		http.Error(w, "Saving file error", http.StatusInternalServerError)
@@ -74,70 +76,51 @@ func UploadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	versionQuery := `
-		INSERT INTO FileVersions (user_id, name, create_date, edit_date)
-		VALUES ($1, $2, $3, $4)
-		RETURNING version_id
-	`
-	versionName := "1.0"
+	mongoID := uploadStream.FileID.(primitive.ObjectID)
+	mongoFileIDStr := mongoID.Hex()
 
 	var versionID int
-	err = config.PostgresDB.QueryRow(
-		versionQuery,
-		userID,      // user_id
-		versionName, // name
-		time.Now(),  // create_date
-		time.Now(),  // edit_date
-	).Scan(&versionID)
+	err = config.PostgresDB.QueryRow(`
+		INSERT INTO FileVersions (user_id, name)
+		VALUES ($1, $2)
+		RETURNING version_id
+	`, userID, "1.0").Scan(&versionID)
 
 	if err != nil {
 		http.Error(w, "Saving version error", http.StatusInternalServerError)
 		return
 	}
 
-	query := `
-		INSERT INTO Files (owner_id, group_id, access_id, version_id, create_date, edit_date, mongo_file_id, name, full_path, type)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-		RETURNING file_id
-	`
-
-	mongoID := uploadStream.FileID.(primitive.ObjectID)
-	mongoFileIDStr := mongoID.Hex()
-
 	var fileID int
-	err = config.PostgresDB.QueryRow(
-		query,
-		userID,          // owner_id
-		sql.NullInt64{}, // group_id
-		sql.NullInt64{}, // access_id
-		versionID,       // version_id
-		time.Now(),      // create_date
-		time.Now(),      // edit_date
-		mongoFileIDStr,  // mongo_file_id as string
-		header.Filename, // name
-		full_path,       // full_path
-		fileType,        // type
-	).Scan(&fileID)
+	err = config.PostgresDB.QueryRow(`
+		INSERT INTO Files (owner_id, version_id, mongo_file_id, name, full_path, type)
+		VALUES ($1, $2, $3, $4, $5, $6)
+		RETURNING file_id
+	`, userID, versionID, mongoFileIDStr, header.Filename, fullPath, fileType).Scan(&fileID)
 
 	if err != nil {
 		http.Error(w, "Saving file metadata error", http.StatusInternalServerError)
 		return
 	}
 
-	fmt.Fprintf(w, "File %s uploaded", header.Filename)
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "File uploaded successfully",
+		"file_id": fileID,
+	})
 }
 
 func DownloadFile(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	fileID := vars["file_id"]
 
-	var mongoFileIDStr string
+	var mongoFileIDStr, fileName, fileType string
 
 	err := config.PostgresDB.QueryRow(`
-		SELECT mongo_file_id
+		SELECT mongo_file_id, name, type
 		FROM Files
 		WHERE file_id = $1
-	`, fileID).Scan(&mongoFileIDStr)
+	`, fileID).Scan(&mongoFileIDStr, &fileName, &fileType)
 
 	if err == sql.ErrNoRows {
 		http.Error(w, "The file was not found in PostgreSQL", http.StatusNotFound)
@@ -147,21 +130,39 @@ func DownloadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// convert mongoFileID to ObjectID
 	mongoFileID, err := primitive.ObjectIDFromHex(mongoFileIDStr)
 	if err != nil {
 		http.Error(w, "Invalid mongo_file_id", http.StatusInternalServerError)
 		return
 	}
 
-	// load file from GridFS
 	bucket, err := gridfs.NewBucket(config.DB)
 	if err != nil {
 		http.Error(w, "GridFS initialization error", http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/octet-stream")
+	ext := strings.ToLower(filepath.Ext(fileName))
+	switch ext {
+	case ".png":
+		w.Header().Set("Content-Type", "image/png")
+	case ".jpg", ".jpeg":
+		w.Header().Set("Content-Type", "image/jpeg")
+	case ".gif":
+		w.Header().Set("Content-Type", "image/gif")
+	case ".webp":
+		w.Header().Set("Content-Type", "image/webp")
+	case ".mp4":
+		w.Header().Set("Content-Type", "video/mp4")
+	case ".mp3":
+		w.Header().Set("Content-Type", "audio/mpeg")
+	case ".wav":
+		w.Header().Set("Content-Type", "audio/wav")
+	default:
+		w.Header().Set("Content-Type", "application/octet-stream")
+	}
+
+	w.Header().Set("Content-Disposition", fmt.Sprintf("inline; filename=\"%s\"", fileName))
 
 	_, err = bucket.DownloadToStream(mongoFileID, w)
 	if err != nil {
@@ -180,7 +181,7 @@ func GetUserFiles(w http.ResponseWriter, r *http.Request) {
 	query := `
 		SELECT 
 			file_id, name, type, full_path, create_date, edit_date,
-			version_id, group_id, owner_id, access_id
+			version_id, owner_id
 		FROM Files
 		WHERE owner_id = $1
 	`
@@ -203,9 +204,7 @@ func GetUserFiles(w http.ResponseWriter, r *http.Request) {
 			&file.CreateDate,
 			&file.EditDate,
 			&file.VersionID,
-			&file.GroupID,
 			&file.OwnerID,
-			&file.AccessID,
 		)
 		if err != nil {
 			http.Error(w, "Row scan error: "+err.Error(), http.StatusInternalServerError)

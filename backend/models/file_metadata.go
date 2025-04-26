@@ -8,9 +8,7 @@ type FileMetadata struct {
 	CreateDate string `json:"create_date"`
 	EditDate   string `json:"edit_date"`
 	VersionID  int    `json:"version_id"`
-	GroupID    *int   `json:"group_id"`
 	OwnerID    *int   `json:"owner_id"`
-	AccessID   *int   `json:"access_id"`
 }
 
 type SharedFile struct {
