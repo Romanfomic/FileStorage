@@ -41,10 +41,13 @@ CREATE TABLE Users (
 
 CREATE TABLE FileVersions (
     version_id SERIAL PRIMARY KEY,
+    file_id INTEGER REFERENCES Files(file_id) ON DELETE CASCADE,
     user_id INTEGER REFERENCES Users(user_id),
     name VARCHAR(100),
     create_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    edit_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    edit_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    mongo_file_id TEXT,
+    UNIQUE(file_id, name)
 );
 
 CREATE TABLE Files (
