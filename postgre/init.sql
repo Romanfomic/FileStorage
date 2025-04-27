@@ -39,9 +39,21 @@ CREATE TABLE Users (
     type VARCHAR(100)
 );
 
+CREATE TABLE Files (
+    file_id SERIAL PRIMARY KEY,
+    mongo_file_id TEXT,
+    owner_id INTEGER REFERENCES Users(user_id),
+    version_id INTEGER,
+    type VARCHAR(50),
+    name VARCHAR(100),
+    full_path VARCHAR(255),
+    create_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    edit_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE FileVersions (
     version_id SERIAL PRIMARY KEY,
-    file_id INTEGER REFERENCES Files(file_id) ON DELETE CASCADE,
+    file_id INTEGER,
     user_id INTEGER REFERENCES Users(user_id),
     name VARCHAR(100),
     create_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -50,17 +62,17 @@ CREATE TABLE FileVersions (
     UNIQUE(file_id, name)
 );
 
-CREATE TABLE Files (
-    file_id SERIAL PRIMARY KEY,
-    mongo_file_id TEXT,
-    owner_id INTEGER REFERENCES Users(user_id),
-    version_id INTEGER REFERENCES FileVersions(version_id),
-    type VARCHAR(50),
-    name TEXT,
-    full_path TEXT,
-    create_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    edit_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+ALTER TABLE Files
+ADD CONSTRAINT fk_files_version
+FOREIGN KEY (version_id)
+REFERENCES FileVersions(version_id)
+ON DELETE SET NULL;
+
+ALTER TABLE FileVersions
+ADD CONSTRAINT fk_fileversions_file
+FOREIGN KEY (file_id)
+REFERENCES Files(file_id)
+ON DELETE CASCADE;
 
 CREATE TABLE File_Users (
     file_id INTEGER REFERENCES Files(file_id) ON DELETE CASCADE,
