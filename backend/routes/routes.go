@@ -59,5 +59,12 @@ func RegisterRoutes() http.Handler {
 	protected.HandleFunc("/files/{file_id}/share/user/{user_id}", handlers.RevokeUserAccess).Methods("DELETE")
 	protected.HandleFunc("/files/{file_id}/share/group/{group_id}", handlers.RevokeGroupAccess).Methods("DELETE")
 
+	// versions
+	protected.HandleFunc("/files/{file_id}/version", handlers.CreateFileVersion).Methods("POST")
+	protected.HandleFunc("/files/{file_id}/versions", handlers.GetFileVersions).Methods("GET")
+	protected.HandleFunc("/files/{file_id}/version", handlers.UpdateFileCurrentVersion).Methods("PUT")
+	protected.HandleFunc("/versions/{version_id}", handlers.UpdateFileVersionName).Methods("PUT")
+	protected.HandleFunc("/versions/{version_id}", handlers.DeleteFileVersion).Methods("DELETE")
+
 	return middleware.CORSMiddleware(router)
 }

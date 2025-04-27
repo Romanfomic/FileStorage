@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	"golang.org/x/crypto/bcrypt"
 )
 
 /*
@@ -186,8 +187,13 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		index++
 	}
 	if updateData.Password != "" {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(updateData.Password), bcrypt.DefaultCost)
+		if err != nil {
+			http.Error(w, "Failed to hash password", http.StatusInternalServerError)
+			return
+		}
 		fields = append(fields, fmt.Sprintf("password = $%d", index))
-		values = append(values, updateData.Password)
+		values = append(values, string(hashedPassword))
 		index++
 	}
 	if updateData.Name != "" {

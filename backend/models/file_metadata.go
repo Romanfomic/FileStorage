@@ -22,3 +22,10 @@ type SharedFile struct {
 	VersionID  int    `json:"version_id"`
 	AccessID   int    `json:"access_id"`
 }
+
+type FileVersion struct {
+	VersionID  int    `json:"version_id"`
+	Name       string `json:"name"`
+	CreateDate string `json:"create_date"`
+	EditDate   string `json:"edit_date"`
+}

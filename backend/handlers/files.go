@@ -25,7 +25,7 @@ import (
 form-data file: file
 */
 func UploadFile(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseMultipartForm(50 << 20)
+	err := r.ParseMultipartForm(50 << 20) // 50MB
 	if err != nil {
 		http.Error(w, "Error parsing form", http.StatusBadRequest)
 		return
@@ -79,27 +79,37 @@ func UploadFile(w http.ResponseWriter, r *http.Request) {
 	mongoID := uploadStream.FileID.(primitive.ObjectID)
 	mongoFileIDStr := mongoID.Hex()
 
+	var fileID int
+	err = config.PostgresDB.QueryRow(`
+		INSERT INTO Files (owner_id, mongo_file_id, name, full_path, type)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING file_id
+	`, userID, mongoFileIDStr, header.Filename, fullPath, fileType).Scan(&fileID)
+	if err != nil {
+		http.Error(w, "Saving file metadata error", http.StatusInternalServerError)
+		return
+	}
+
+	// Create default version
 	var versionID int
 	err = config.PostgresDB.QueryRow(`
-		INSERT INTO FileVersions (user_id, name)
-		VALUES ($1, $2)
+		INSERT INTO FileVersions (user_id, file_id, mongo_file_id, name)
+		VALUES ($1, $2, $3, $4)
 		RETURNING version_id
-	`, userID, "1.0").Scan(&versionID)
-
+	`, userID, fileID, mongoFileIDStr, "1.0").Scan(&versionID)
 	if err != nil {
 		http.Error(w, "Saving version error", http.StatusInternalServerError)
 		return
 	}
 
-	var fileID int
-	err = config.PostgresDB.QueryRow(`
-		INSERT INTO Files (owner_id, version_id, mongo_file_id, name, full_path, type)
-		VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING file_id
-	`, userID, versionID, mongoFileIDStr, header.Filename, fullPath, fileType).Scan(&fileID)
-
+	// Add new version to file
+	_, err = config.PostgresDB.Exec(`
+		UPDATE Files
+		SET version_id = $1
+		WHERE file_id = $2
+	`, versionID, fileID)
 	if err != nil {
-		http.Error(w, "Saving file metadata error", http.StatusInternalServerError)
+		http.Error(w, "Updating file version error", http.StatusInternalServerError)
 		return
 	}
 
