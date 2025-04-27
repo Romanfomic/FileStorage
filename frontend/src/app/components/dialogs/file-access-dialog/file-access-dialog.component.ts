@@ -43,10 +43,10 @@ export class FileAccessDialogComponent {
     allUsers: User[] = [];
     allGroups: Group[] = [];
 
-    userAccessMap: { [userId: number]: boolean } = {};
-    userAccessLevelMap: { [userId: number]: number } = {};
-    groupAccessMap: { [groupId: number]: boolean } = {};
-    groupAccessLevelMap: { [groupId: number]: number } = {};
+    userAccessLevelMap: { [userId: number]: number | null } = {};
+    groupAccessLevelMap: { [groupId: number]: number | null } = {};
+    initialUserAccessLevelMap: { [userId: number]: number | null } = {};
+    initialGroupAccessLevelMap: { [groupId: number]: number | null } = {};
 
     fullAccessOptions = [
         { label: 'Нет доступа', value: null },
@@ -61,53 +61,72 @@ export class FileAccessDialogComponent {
     open(file: FileMetadata) {
         this.file = file;
         this.visible = true;
-
-        this.loadUsers$ = this.userService.getAllUsers().pipe((
+    
+        this.loadUsers$ = this.userService.getAllUsers().pipe(
             tap((users) => this.allUsers = users)
-        ))
-
-        this.loadGroups$ = this.groupService.getGroups().pipe((
+        );
+    
+        this.loadGroups$ = this.groupService.getGroups().pipe(
             tap((groups) => this.allGroups = groups)
-        ))
-        
+        );
+    
         this.load$ = this.fileService.getFilePermissions(this.file.file_id).pipe(
             tap((res) => {
-                if (!!res.users)
+                this.userAccessLevelMap = {};
+                this.groupAccessLevelMap = {};
+                this.initialUserAccessLevelMap = {};
+                this.initialGroupAccessLevelMap = {};
+    
+                if (!!res.users) {
                     for (let u of res.users) {
-                        this.userAccessMap[u.user_id] = true;
                         this.userAccessLevelMap[u.user_id] = u.access_id;
+                        this.initialUserAccessLevelMap[u.user_id] = u.access_id;
                     }
-
-                if (!!res.groups)
+                }
+    
+                if (!!res.groups) {
                     for (let g of res.groups) {
-                        this.groupAccessMap[g.group_id] = true;
                         this.groupAccessLevelMap[g.group_id] = g.access_id;
+                        this.initialGroupAccessLevelMap[g.group_id] = g.access_id;
                     }
+                }
             }),
-        )
-    }    
+        );
+    }
 
     save() {
         const fileId = this.file.file_id;
-
-        for (let userId in this.userAccessMap) {
-            const id = Number(userId);
-            if (this.userAccessMap[id]) {
-                this.fileService.shareFileWithUser(fileId, id, this.userAccessLevelMap[id]).subscribe();
-            } else {
-                this.fileService.revokeUserAccess(fileId, id).subscribe();
+    
+        // Сохраняем изменения для пользователей
+        for (let userIdStr in this.userAccessLevelMap) {
+            const userId = Number(userIdStr);
+            const newAccess = this.userAccessLevelMap[userId];
+            const initialAccess = this.initialUserAccessLevelMap[userId];
+    
+            if (newAccess !== initialAccess) { // Только если изменилось
+                if (newAccess === null || newAccess === undefined) {
+                    this.fileService.revokeUserAccess(fileId, userId).subscribe();
+                } else {
+                    this.fileService.shareFileWithUser(fileId, userId, newAccess).subscribe();
+                }
             }
         }
-
-        for (let groupId in this.groupAccessMap) {
-            const id = Number(groupId);
-            if (this.groupAccessMap[id]) {
-                this.fileService.shareFileWithGroup(fileId, id, this.groupAccessLevelMap[id]).subscribe();
-            } else {
-                this.fileService.revokeGroupAccess(fileId, id).subscribe();
+    
+        // Сохраняем изменения для групп
+        for (let groupIdStr in this.groupAccessLevelMap) {
+            const groupId = Number(groupIdStr);
+            const newAccess = this.groupAccessLevelMap[groupId];
+            const initialAccess = this.initialGroupAccessLevelMap[groupId];
+    
+            if (newAccess !== initialAccess) { // Только если изменилось
+                if (newAccess === null || newAccess === undefined) {
+                    this.fileService.revokeGroupAccess(fileId, groupId).subscribe();
+                } else {
+                    this.fileService.shareFileWithGroup(fileId, groupId, newAccess).subscribe();
+                }
             }
         }
-
+    
         this.visible = false;
     }
 
