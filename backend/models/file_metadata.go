@@ -28,4 +28,5 @@ type FileVersion struct {
 	Name       string `json:"name"`
 	CreateDate string `json:"create_date"`
 	EditDate   string `json:"edit_date"`
+	IsCurrent  bool   `json:"is_current"`
 }

@@ -192,9 +192,14 @@ func GetFileVersions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// сheck if user is owner
-	var ownerID int
-	err = config.PostgresDB.QueryRow(`SELECT owner_id FROM Files WHERE file_id = $1`, fileID).Scan(&ownerID)
+	// check if user is owner
+	var ownerID, currentVersionID int
+	err = config.PostgresDB.QueryRow(`
+		SELECT owner_id, version_id 
+		FROM Files 
+		WHERE file_id = $1
+	`, fileID).Scan(&ownerID, &currentVersionID)
+
 	if err != nil {
 		http.Error(w, "File not found", http.StatusNotFound)
 		return
@@ -206,11 +211,11 @@ func GetFileVersions(w http.ResponseWriter, r *http.Request) {
 
 	// get versions
 	rows, err := config.PostgresDB.Query(`
-        SELECT version_id, name, create_date, edit_date
-        FROM FileVersions
-        WHERE file_id = $1
-        ORDER BY create_date DESC
-    `, fileID)
+		SELECT version_id, name, create_date, edit_date
+		FROM FileVersions
+		WHERE file_id = $1
+		ORDER BY create_date DESC
+	`, fileID)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
@@ -225,6 +230,7 @@ func GetFileVersions(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Database error", http.StatusInternalServerError)
 			return
 		}
+		v.IsCurrent = (v.VersionID == currentVersionID)
 		versions = append(versions, v)
 	}
 
