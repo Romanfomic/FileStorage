@@ -13,6 +13,7 @@ import { FileAccessDialogComponent } from "../../components/dialogs/file-access-
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
+import { FileVersionDialogComponent } from '../../components/dialogs/file-version-dialog/file-version-dialog.component';
 
 @Component({
     selector: 'app-storage',
@@ -25,9 +26,10 @@ import { InputTextModule } from 'primeng/inputtext';
     DialogModule,
     FileUploadModule,
     FileAccessDialogComponent,
+    FileVersionDialogComponent,
     FormsModule,
     ButtonModule,
-    InputTextModule
+    InputTextModule,
 ],
     templateUrl: './storage.component.html',
     styleUrl: './storage.component.less',
@@ -37,6 +39,7 @@ export class StorageComponent {
     private userService = inject(UserService);
 
     @ViewChild(FileAccessDialogComponent) accessDialog!: FileAccessDialogComponent;
+    @ViewChild(FileVersionDialogComponent) versionDialog!: FileVersionDialogComponent;
 
     load$ = this.fileService.getUserFiles().pipe(
         tap((files) => {
@@ -209,5 +212,10 @@ export class StorageComponent {
         }
         this.previewUrl = null;
         this.previewType = null;
-    }    
+    }
+
+    openVersionDialog(file: FileMetadata) {
+        this.showDialog = false;
+        this.versionDialog.open(file);
+    }
 }

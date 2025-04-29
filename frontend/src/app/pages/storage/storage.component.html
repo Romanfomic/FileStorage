@@ -57,6 +57,7 @@
         <li (click)="downloadFile(selectedFile!)">Скачать</li>
         <li (click)="viewInfo(selectedFile!)">Подробная информация</li>
         <li (click)="openShareDialog(selectedFile!)">Управление доступом</li>
+        <li (click)="openVersionDialog(selectedFile!)">Версии</li>
         <li class="danger" (click)="deleteFile(selectedFile!)">Удалить</li>
     </ul>
 </p-dialog>
@@ -116,3 +117,6 @@
 
 <!-- share dialog -->
 <app-file-access-dialog></app-file-access-dialog>
+
+<!-- file version dialog -->
+<app-file-version-dialog></app-file-version-dialog>

@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environment';
 import { FileMetadata } from '../interfaces/fileData';
+import { FileVersion } from '../interfaces/version';
 
 @Injectable({ providedIn: 'root' })
 export class FileService {
@@ -10,6 +11,7 @@ export class FileService {
 
     private baseUrl = `${environment.apiUrl}/api/files`;
     private sharedUrl = `${environment.apiUrl}/api/shared-files`;
+    private versionUrl = `${environment.apiUrl}/api/versions`;
 
     getUserFiles(): Observable<FileMetadata[]> {
         return this.http.get<FileMetadata[]>(this.baseUrl);
@@ -63,5 +65,25 @@ export class FileService {
     
     getFilePermissions(fileId: number): Observable<any> {
         return this.http.get(`${this.baseUrl}/${fileId}/permissions`);
+    }
+
+    getFileVersions(fileId: number): Observable<FileVersion[]> {
+        return this.http.get<FileVersion[]>(`${this.baseUrl}/${fileId}/versions`);
+    }
+
+    createVersion(fileId: number, name: string): Observable<any> {
+        return this.http.post(`${this.baseUrl}/${fileId}/version`, { name });
+    }
+
+    setCurrentVersion(fileId: number, versionId: number): Observable<any> {
+        return this.http.put(`${this.baseUrl}/${fileId}/version`, { version_id: versionId });
+    }
+
+    deleteVersion(versionId: number): Observable<any> {
+        return this.http.delete(`${this.versionUrl}/${versionId}`);
+    }
+
+    renameVersion(versionId: number, newName: string): Observable<any> {
+        return this.http.put(`${this.versionUrl}/${versionId}`, { name: newName });
     }
 }

@@ -1,0 +1,80 @@
+<ng-container *ngIf="action$ | async"></ng-container>
+
+<p-dialog [(visible)]="showDialog" [modal]="true" header="Версии файла" [style]="{width: '600px'}">
+    <ng-template pTemplate="content">
+        <div class="version-list">
+            <div *ngFor="let version of versions" class="version-row">
+                <p-radioButton 
+                    name="version" 
+                    [value]="version.version_id" 
+                    [(ngModel)]="currentVersionId" 
+                    (onClick)="setCurrentVersion(version)" 
+                    [disabled]="version.version_id === currentVersionId"
+                ></p-radioButton>
+
+                <div class="version-info-wrapper">
+                    <div class="version-edit-row" *ngIf="editingVersionId === version.version_id; else normalView">
+                        <input 
+                            pInputText 
+                            class="edit-input" 
+                            [(ngModel)]="editingVersionName" 
+                        />
+
+                        <div>
+                            <p-button 
+                                icon="pi pi-check" 
+                                class="p-button-sm" 
+                                (click)="saveEdit(version)">
+                            </p-button>
+
+                            <p-button 
+                                icon="pi pi-times" 
+                                class="p-button-sm" 
+                                (click)="cancelEdit()">
+                            </p-button>
+
+                            <p-button 
+                                icon="pi pi-trash" 
+                                class="p-button-sm" 
+                                [disabled]="version.version_id === currentVersionId" 
+                                (click)="deleteVersion(version)">
+                            </p-button>
+                        </div>
+                    </div>
+
+                    <ng-template #normalView>
+                        <div class="version-info">
+                            <span>{{ version.name }}</span>
+                            <span class="timestamp">{{ version.create_date | date: 'dd.MM.yyyy, HH:mm' }} / {{ version.edit_date | date: 'dd.MM.yyyy, HH:mm' }}</span>
+                        </div>
+
+                        <div class="controls">
+                            <p-button 
+                                icon="pi pi-pencil" 
+                                class="p-button-sm" 
+                                (click)="enableEditing(version)">
+                            </p-button>
+
+                            <p-button 
+                                icon="pi pi-trash" 
+                                class="p-button-sm" 
+                                [disabled]="version.version_id === currentVersionId" 
+                                (click)="deleteVersion(version)">
+                            </p-button>
+                        </div>
+                    </ng-template>
+                </div>
+            </div>
+        </div>
+        
+        <div class="new-version">
+            <input pInputText [(ngModel)]="newVersionName" placeholder="Название новой версии" />
+            <p-button label="Создать версию" (click)="createVersion()"></p-button>
+        </div>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+        <p-button label="Закрыть" (click)="close()"></p-button>  
+    </ng-template>
+</p-dialog>
+  
