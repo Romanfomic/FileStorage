@@ -419,28 +419,29 @@ func UpdateFileCurrentVersion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check file version
-	var linkedFileID int
+	// get the mongo_file_id from the selected version
+	var versionFileID int
+	var newMongoFileID string
 	err = config.PostgresDB.QueryRow(`
-		SELECT file_id
+		SELECT file_id, mongo_file_id
 		FROM FileVersions
 		WHERE version_id = $1
-	`, reqBody.VersionID).Scan(&linkedFileID)
+	`, reqBody.VersionID).Scan(&versionFileID, &newMongoFileID)
 	if err != nil {
 		http.Error(w, "Version not found", http.StatusNotFound)
 		return
 	}
-	if linkedFileID != fileID {
+	if versionFileID != fileID {
 		http.Error(w, "Version does not belong to the specified file", http.StatusBadRequest)
 		return
 	}
 
-	// update current version
+	// update current version and mongo_file_id in Files table
 	_, err = config.PostgresDB.Exec(`
 		UPDATE Files
-		SET version_id = $1
-		WHERE file_id = $2
-	`, reqBody.VersionID, fileID)
+		SET version_id = $1, mongo_file_id = $2, edit_date = NOW()
+		WHERE file_id = $3
+	`, reqBody.VersionID, newMongoFileID, fileID)
 	if err != nil {
 		http.Error(w, "Failed to update current version", http.StatusInternalServerError)
 		return
