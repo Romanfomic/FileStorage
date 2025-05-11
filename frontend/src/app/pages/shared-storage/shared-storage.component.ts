@@ -27,6 +27,7 @@ export class SharedStorageComponent {
     load$ = this.fileService.getSharedFiles().pipe(
         tap(files => this.files = files)
     );
+    action$!: Observable<any>;
 
     files: FileMetadata[] = [];
     selectedFile: FileMetadata | null = null;
@@ -34,7 +35,11 @@ export class SharedStorageComponent {
 
     showDialog = false;
     showInfoDialog = false;
+    showPreviewDialog = false;
     contextMenuPosition = { x: '0px', y: '0px' };
+
+    previewUrl: string | null = null;
+    previewType: 'image' | 'video' | 'audio' | null = null;
 
     onRightClick(event: MouseEvent, file: FileMetadata) {
         event.preventDefault();
@@ -74,5 +79,51 @@ export class SharedStorageComponent {
                 return EMPTY;
             })
         ).subscribe();
+    }
+
+    previewFile(file: FileMetadata) {
+        this.action$ = this.fileService.downloadFile(file.file_id).pipe(
+            tap((blob) => {
+                const url = URL.createObjectURL(blob);
+
+                const ext = file.name.split('.').pop()?.toLowerCase();
+                if (ext) {
+                    if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext)) {
+                        this.previewType = 'image';
+                    } else if (['mp4', 'webm'].includes(ext)) {
+                        this.previewType = 'video';
+                    } else if (['mp3', 'wav', 'ogg'].includes(ext)) {
+                        this.previewType = 'audio';
+                    } else {
+                        this.previewType = null;
+                    }
+                }
+    
+                if (this.previewType) {
+                    this.previewUrl = url;
+                    this.showPreviewDialog = true;
+                } else {
+                    // download if cannot show preview
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = file.name;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                }
+            }),
+            catchError((error) => {
+                console.error('Preview error', error);
+                return EMPTY;
+            }),
+        )
+    }
+
+    closePreview() {
+        this.showPreviewDialog = false;
+        if (this.previewUrl) {
+            URL.revokeObjectURL(this.previewUrl);
+        }
+        this.previewUrl = null;
+        this.previewType = null;
     }
 }
