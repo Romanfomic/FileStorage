@@ -4,9 +4,9 @@
         <ul>
         <li (click)="navigate('/storage')">Хранилище</li>
         <li (click)="navigate('/shared')">Доступные мне</li>
-        <li (click)="navigate('/users')">Пользователи</li>
-        <li (click)="navigate('/groups')">Группы</li>
-        <li (click)="navigate('/roles')">Роли</li>
+        <li (click)="navigate('/users')" [class.hidden]="!isUsersManage">Пользователи</li>
+        <li (click)="navigate('/groups')" [class.hidden]="!isGroupsManage">Группы</li>
+        <li (click)="navigate('/roles')" [class.hidden]="!isRolesManage">Роли</li>
         </ul>
     </aside>
 
