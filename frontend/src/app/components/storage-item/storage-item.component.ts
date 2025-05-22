@@ -1,11 +1,11 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { FileMetadata } from '../../interfaces/fileData';
 
 @Component({
     selector: 'app-storage-item',
     standalone: true,
-    imports: [CommonModule],
+    imports: [CommonModule, DatePipe],
     templateUrl: './storage-item.component.html',
     styleUrl: './storage-item.component.less',
 })
@@ -37,5 +37,12 @@ export class StorageItemComponent {
             case 'json': return '/assets/icons/code.png';
             default: return '/assets/icons/file.png';
         }
+    }
+
+    getAccess(): string {
+        if (!this.file.access_id) return ''
+        
+        if (this.file.access_id === 1) return 'чтение'
+        return 'редактирование'
     }
 }

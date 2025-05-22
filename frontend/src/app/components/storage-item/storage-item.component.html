@@ -1,4 +1,6 @@
 <div class="storage-item" (dblclick)="preview.emit(file)">
     <img [src]="iconSrc" class="icon" [alt]="file.name" />
     <div class="filename">{{ file.name }}</div>
+    <div class="extra-info">{{ file.edit_date |  date: 'dd.MM.yyyy, HH:mm' }}</div>
+    <div class="extra-info">{{ getAccess() }}</div>
 </div>
