@@ -2,6 +2,17 @@
 <ng-container *ngIf="action$ | async"></ng-container>
 
 <div class="storage-container">
+    <div class="actions">
+        <div class="search-bar">
+            <input 
+                type="text"
+                pInputText
+                placeholder="Поиск файлов..."
+                [(ngModel)]="searchQuery"
+                (ngModelChange)="onSearchChange($event)"
+            />
+        </div>
+    </div>
     <div *ngIf="files.length; else noFiles" class="grid-view">
         <app-storage-item 
             *ngFor="let file of files" 

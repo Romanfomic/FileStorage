@@ -7,6 +7,8 @@ import { UserService } from '../../services/user.service';
 import { User } from '../../interfaces/user';
 import { EMPTY, tap, catchError, Observable } from 'rxjs';
 import { StorageItemComponent } from '../../components/storage-item/storage-item.component';
+import { FormsModule } from '@angular/forms';
+import { InputTextModule } from 'primeng/inputtext';
 
 @Component({
     selector: 'app-shared-storage',
@@ -16,6 +18,8 @@ import { StorageItemComponent } from '../../components/storage-item/storage-item
         AsyncPipe,
         DialogModule,
         StorageItemComponent,
+        FormsModule,
+        InputTextModule,
     ],
     templateUrl: './shared-storage.component.html',
     styleUrl: './shared-storage.component.less'
@@ -24,10 +28,7 @@ export class SharedStorageComponent {
     private fileService = inject(FileService);
     private userService = inject(UserService);
 
-    load$ = this.fileService.getSharedFiles().pipe(
-        tap(files => this.files = files)
-    );
-    action$!: Observable<any>;
+    searchQuery = '';
 
     files: FileMetadata[] = [];
     selectedFile: FileMetadata | null = null;
@@ -41,6 +42,11 @@ export class SharedStorageComponent {
     previewUrl: string | null = null;
     previewType: 'image' | 'video' | 'audio' | null = null;
 
+    load$ = this.fileService.getSharedFiles().pipe(
+        tap(files => this.files = files)
+    );
+    action$!: Observable<any>;
+
     onRightClick(event: MouseEvent, file: FileMetadata) {
         event.preventDefault();
         this.selectedFile = file;
@@ -49,6 +55,19 @@ export class SharedStorageComponent {
             y: `${event.clientY}px`
         };
         this.showDialog = true;
+    }
+
+    onSearchChange(query: string) {
+        this.loadFiles(query);
+    }
+
+    loadFiles(search = '') {
+        this.load$ = this.fileService.getSharedFiles(search).pipe(
+            tap((files) => {
+                if (!files) this.files = []
+                else this.files = files
+            })
+        );
     }
 
     downloadFile(file: FileMetadata) {

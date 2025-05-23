@@ -188,15 +188,34 @@ func GetUserFiles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	query := `
-		SELECT 
-			file_id, name, type, full_path, create_date, edit_date,
-			version_id, owner_id
-		FROM Files
-		WHERE owner_id = $1
-	`
+	search := r.URL.Query().Get("search") // получаем параметр поиска
 
-	rows, err := config.PostgresDB.Query(query, userID)
+	var (
+		query string
+		args  []interface{}
+	)
+
+	if search != "" {
+		query = `
+			SELECT 
+				file_id, name, type, full_path, create_date, edit_date,
+				version_id, owner_id
+			FROM Files
+			WHERE owner_id = $1 AND name ILIKE $2
+		`
+		args = append(args, userID, "%"+search+"%")
+	} else {
+		query = `
+			SELECT 
+				file_id, name, type, full_path, create_date, edit_date,
+				version_id, owner_id
+			FROM Files
+			WHERE owner_id = $1
+		`
+		args = append(args, userID)
+	}
+
+	rows, err := config.PostgresDB.Query(query, args...)
 	if err != nil {
 		http.Error(w, "Database query error: "+err.Error(), http.StatusInternalServerError)
 		return

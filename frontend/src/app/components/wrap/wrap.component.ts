@@ -49,7 +49,7 @@ export class WrapComponent {
     getTitle(): string {
       const route = this.router.url.split('/')[1];
       const titles: Record<string, string> = {
-            storage: 'Хранилище',
+            storage: 'Мои файлы',
             shared: 'Доступные мне',
             users: 'Пользователи',
             roles: 'Роли',

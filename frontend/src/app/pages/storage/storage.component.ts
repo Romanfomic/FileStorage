@@ -41,14 +41,7 @@ export class StorageComponent {
     @ViewChild(FileAccessDialogComponent) accessDialog!: FileAccessDialogComponent;
     @ViewChild(FileVersionDialogComponent) versionDialog!: FileVersionDialogComponent;
 
-    load$ = this.fileService.getUserFiles().pipe(
-        tap((files) => {
-            this.files = files;
-        })
-    );
-
-    action$!: Observable<any>;
-
+    searchQuery = '';
     files: FileMetadata[] = [];
     selectedFile: FileMetadata | null = null;
 
@@ -63,6 +56,12 @@ export class StorageComponent {
     contextMenuPosition = { x: '0px', y: '0px' };
     previewUrl: string | null = null;
     previewType: 'image' | 'video' | 'audio' | null = null;
+
+    load$ = this.fileService.getUserFiles().pipe(
+        tap(files => this.files = files)
+    );
+
+    action$!: Observable<any>;
 
     onFileSelected(event: { files: File[] }) {
         const file = event.files?.[0];
@@ -82,10 +81,31 @@ export class StorageComponent {
             })
         );
     }
+
+    onSearchChange(query: string) {
+        this.loadFiles(query);
+    }
+
+    loadFiles(search = '') {
+        this.load$ = this.fileService.getUserFiles(search).pipe(
+            tap((files) => {
+                if (!files) files = []
+                else this.files = files}
+            ),
+            catchError(() => {
+                this.files = [];
+                return EMPTY;
+            })
+        );
+    }
     
     refreshFiles() {
-        this.load$ = this.fileService.getUserFiles().pipe(
+        this.load$ = this.fileService.getUserFiles(this.searchQuery).pipe(
             tap(files => this.files = files),
+            catchError(() => {
+                this.files = [];
+                return EMPTY;
+            })
         );
     }
 

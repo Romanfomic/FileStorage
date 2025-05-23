@@ -13,8 +13,9 @@ export class FileService {
     private sharedUrl = `${environment.apiUrl}/api/shared-files`;
     private versionUrl = `${environment.apiUrl}/api/versions`;
 
-    getUserFiles(): Observable<FileMetadata[]> {
-        return this.http.get<FileMetadata[]>(this.baseUrl);
+    getUserFiles(search: string = ''): Observable<FileMetadata[]> {
+        const params = search ? { params: { search } } : {};
+        return this.http.get<FileMetadata[]>(this.baseUrl, params);
     }
 
     uploadFile(formData: FormData): Observable<any> {
@@ -37,8 +38,9 @@ export class FileService {
         return this.http.put(`${this.baseUrl}/${fileId}`, { name });
     }      
 
-    getSharedFiles(): Observable<FileMetadata[]> {
-        return this.http.get<FileMetadata[]>(`${this.sharedUrl}`);
+    getSharedFiles(search: string = ''): Observable<FileMetadata[]> {
+        const params = search ? { params: { search } } : {};
+        return this.http.get<FileMetadata[]>(`${this.sharedUrl}`, params);
     }
 
     shareFileWithUser(fileId: number, userId: number, accessId: number): Observable<any> {

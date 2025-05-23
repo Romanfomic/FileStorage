@@ -14,6 +14,16 @@
                 [showUploadButton]="false"
                 [showCancelButton]="false"
             />
+
+        <div class="search-bar">
+            <input 
+                type="text"
+                pInputText
+                placeholder="Поиск файлов..."
+                [(ngModel)]="searchQuery"
+                (ngModelChange)="onSearchChange($event)"
+            />
+        </div>
     </div>
 
     <div *ngIf="files.length; else noFiles" class="grid-view">
@@ -26,7 +36,7 @@
     </div>
 
     <ng-template #noFiles>
-        <p>Файлов пока нет.</p>
+        <p>Файлы не обнаружены</p>
     </ng-template>
 </div>
 

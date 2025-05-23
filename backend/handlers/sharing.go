@@ -124,15 +124,15 @@ func GetSharedFiles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get files shared to user
+	search := r.URL.Query().Get("search")
+
+	// Базовые SQL-запросы
 	userFilesQuery := `
 		SELECT f.file_id, f.name, f.full_path, f.owner_id, fu.access_id, f.version_id, f.create_date, f.edit_date
 		FROM Files f
 		JOIN File_Users fu ON f.file_id = fu.file_id
 		WHERE fu.user_id = $1
 	`
-
-	// get files shared to groups
 	groupFilesQuery := `
 		SELECT f.file_id, f.name, f.full_path, f.owner_id, fg.group_id, fg.access_id, f.version_id, f.create_date, f.edit_date
 		FROM Files f
@@ -141,10 +141,21 @@ func GetSharedFiles(w http.ResponseWriter, r *http.Request) {
 		WHERE u.user_id = $1
 	`
 
-	// map for merge files data
+	var userArgs = []interface{}{userID}
+	var groupArgs = []interface{}{userID}
+
+	// Добавляем фильтр поиска, если указан
+	if search != "" {
+		userFilesQuery += " AND f.name ILIKE $2"
+		groupFilesQuery += " AND f.name ILIKE $2"
+		userArgs = append(userArgs, "%"+search+"%")
+		groupArgs = append(groupArgs, "%"+search+"%")
+	}
+
 	filesMap := make(map[int]*models.SharedFile)
 
-	userRows, err := config.PostgresDB.Query(userFilesQuery, userID)
+	// Обработка файлов, расшаренных напрямую
+	userRows, err := config.PostgresDB.Query(userFilesQuery, userArgs...)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
@@ -174,7 +185,8 @@ func GetSharedFiles(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	groupRows, err := config.PostgresDB.Query(groupFilesQuery, userID)
+	// Обработка файлов, расшаренных через группы
+	groupRows, err := config.PostgresDB.Query(groupFilesQuery, groupArgs...)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
@@ -191,17 +203,8 @@ func GetSharedFiles(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// check files exist in map
 		if file, exists := filesMap[fileID]; exists {
-			// add group_id
 			file.GroupIDs = append(file.GroupIDs, groupID)
-
-			// if the group_id was nil, and there was no provision directly to the user, we set it
-			if file.GroupIDs == nil {
-				file.GroupIDs = []int{groupID}
-			}
-
-			// If access is through a higher group, we update the access_id
 			if accessID > file.AccessID {
 				file.AccessID = accessID
 			}
