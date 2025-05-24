@@ -74,6 +74,11 @@ FOREIGN KEY (file_id)
 REFERENCES Files(file_id)
 ON DELETE CASCADE;
 
+ALTER TABLE Groups 
+ADD COLUMN parent_id INTEGER 
+REFERENCES Groups(group_id) 
+ON DELETE SET NULL;
+
 CREATE TABLE File_Users (
     file_id INTEGER REFERENCES Files(file_id) ON DELETE CASCADE,
     user_id INTEGER REFERENCES Users(user_id) ON DELETE CASCADE,
@@ -87,6 +92,35 @@ CREATE TABLE File_Groups (
     access_id INTEGER REFERENCES Access(access_id),
     PRIMARY KEY (file_id, group_id)
 );
+
+CREATE OR REPLACE FUNCTION get_group_tree(root_id INT)
+RETURNS TABLE (
+    group_id INT,
+    name TEXT,
+    description TEXT,
+    parent_id INT,
+    depth INT,
+    path INT[]
+)
+AS $$
+BEGIN
+    RETURN QUERY
+    WITH RECURSIVE tree AS (
+        SELECT
+            group_id, name, description, parent_id, 0 AS depth, ARRAY[group_id]
+        FROM Groups
+        WHERE (root_id IS NULL AND parent_id IS NULL) OR group_id = root_id
+
+        UNION ALL
+
+        SELECT
+            g.group_id, g.name, g.description, g.parent_id, t.depth + 1, t.path || g.group_id
+        FROM Groups g
+        JOIN tree t ON g.parent_id = t.group_id
+    )
+    SELECT * FROM tree ORDER BY path;
+END;
+$$ LANGUAGE plpgsql;
 
 INSERT INTO Permissions (name, description) VALUES
 ('manage_roles', 'Управление ролями'),
