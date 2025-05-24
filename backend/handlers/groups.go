@@ -9,7 +9,6 @@ import (
 	"backend/config"
 
 	"github.com/gorilla/mux"
-	"github.com/lib/pq"
 )
 
 type Group struct {
@@ -18,23 +17,13 @@ type Group struct {
 	Description string `json:"description"`
 	ParentID    *int   `json:"parent_id"` // nullable
 }
-
 type GroupTreeNode struct {
-	ID          int             `json:"group_id"`
-	Name        string          `json:"name"`
-	Description string          `json:"description"`
-	ParentID    *int            `json:"parent_id,omitempty"`
-	Depth       int             `json:"depth"`
-	Children    []GroupTreeNode `json:"children,omitempty"`
-}
-
-type flatGroupNode struct {
-	ID          int
-	Name        string
-	Description string
-	ParentID    sql.NullInt32
-	Depth       int
-	Path        pq.Int64Array
+	ID          int              `json:"group_id"`
+	Name        string           `json:"name"`
+	Description string           `json:"description"`
+	ParentID    *int             `json:"parent_id,omitempty"`
+	Depth       int              `json:"depth"`
+	Children    []*GroupTreeNode `json:"children,omitempty"`
 }
 
 /*
@@ -145,89 +134,64 @@ func DeleteGroup(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// GET /api/groups/tree or /api/groups/tree?id=3
 func GetGroupTree(w http.ResponseWriter, r *http.Request) {
-	query := r.URL.Query()
-	idParam := query.Get("id")
+	// Get id from query
+	rootIDParam := r.URL.Query().Get("id")
+	var rootID sql.NullInt32
 
-	var rows *sql.Rows
-	var err error
-
-	if idParam == "" {
-		rows, err = config.PostgresDB.Query("SELECT * FROM get_group_tree(NULL)")
-	} else {
-		groupID, errParse := strconv.Atoi(idParam)
-		if errParse != nil {
-			http.Error(w, "Invalid group ID", http.StatusBadRequest)
+	if rootIDParam != "" {
+		id, err := strconv.Atoi(rootIDParam)
+		if err != nil {
+			http.Error(w, "Invalid ID", http.StatusBadRequest)
 			return
 		}
-		rows, err = config.PostgresDB.Query("SELECT * FROM get_group_tree($1)", groupID)
+		rootID.Int32 = int32(id)
+		rootID.Valid = true
 	}
 
+	rows, err := config.PostgresDB.Query(`
+		SELECT group_id, name, description, parent_id, depth
+		FROM get_group_tree($1)
+	`, rootID)
 	if err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		http.Error(w, "DB query error", http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
 
-	nodes := []flatGroupNode{}
+	nodes := make(map[int]*GroupTreeNode)
+	var roots []*GroupTreeNode
+
 	for rows.Next() {
-		var node flatGroupNode
+		var g GroupTreeNode
 		var parentID sql.NullInt32
-		err := rows.Scan(&node.ID, &node.Name, &node.Description, &parentID, &node.Depth, &node.Path)
-		if err != nil {
+
+		if err := rows.Scan(&g.ID, &g.Name, &g.Description, &parentID, &g.Depth); err != nil {
 			http.Error(w, "Row scan error", http.StatusInternalServerError)
 			return
 		}
 		if parentID.Valid {
-			id := int(parentID.Int32)
-			node.ParentID = sql.NullInt32{Int32: int32(id), Valid: true}
+			pid := int(parentID.Int32)
+			g.ParentID = &pid
 		}
-		nodes = append(nodes, node)
-	}
 
-	tree := buildGroupTree(nodes)
+		nodes[g.ID] = &g
+
+		// create tree
+		if g.Depth == 0 {
+			roots = append(roots, &g)
+		} else if g.ParentID != nil {
+			parent, exists := nodes[*g.ParentID]
+			if exists {
+				parent.Children = append(parent.Children, &g)
+			}
+		}
+	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(tree)
-}
-
-func buildGroupTree(flatNodes []flatGroupNode) []GroupTreeNode {
-	nodeMap := make(map[int]*GroupTreeNode)
-	var roots []*GroupTreeNode
-
-	// Create nodes
-	for _, flat := range flatNodes {
-		node := &GroupTreeNode{
-			ID:          flat.ID,
-			Name:        flat.Name,
-			Description: flat.Description,
-			Depth:       flat.Depth,
-		}
-		if flat.ParentID.Valid {
-			id := int(flat.ParentID.Int32)
-			node.ParentID = &id
-		}
-		nodeMap[node.ID] = node
+	if len(roots) > 0 {
+		json.NewEncoder(w).Encode(roots)
+	} else {
+		w.Write([]byte("[]"))
 	}
-
-	// Connect parents with children
-	for _, node := range nodeMap {
-		if node.ParentID != nil {
-			if parent, ok := nodeMap[*node.ParentID]; ok {
-				parent.Children = append(parent.Children, *node)
-			} else {
-				roots = append(roots, node)
-			}
-		} else {
-			roots = append(roots, node)
-		}
-	}
-
-	// []*GroupTreeNode -> []GroupTreeNode for JSON
-	var result []GroupTreeNode
-	for _, root := range roots {
-		result = append(result, *root)
-	}
-	return result
 }
