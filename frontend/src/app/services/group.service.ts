@@ -10,8 +10,12 @@ export class GroupService {
     private baseUrl = `${environment.apiUrl}/api/groups`;
 
     getGroups(): Observable<Group[]> {
-        return this.http.get<Group[]>(this.baseUrl);
+        return this.http.get<Group[]>(`${this.baseUrl}/tree`);
     }
+
+    getAllGroups(): Observable<Group[]> {
+        return this.http.get<Group[]>(`${this.baseUrl}`);
+    } 
 
     getGroupById(id: number): Observable<Group> {
         return this.http.get<Group>(`${this.baseUrl}/${id}`);

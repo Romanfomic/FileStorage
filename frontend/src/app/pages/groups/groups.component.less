@@ -9,6 +9,24 @@ button[pButton] {
     margin-right: 0.5rem;
 }
 
+p-tree {
+    ::ng-deep {
+        .p-tree-node-label {
+            width: 100%;
+        }
+    }
+}
+
+.group-wrapper {
+    display: flex;
+    justify-content: space-between;
+}
+
+.group-label {
+    display: flex;
+    align-items: center;
+}
+
 p-table {
     margin-top: 1rem;
 
@@ -40,11 +58,11 @@ p-table {
         width: 2rem;
         height: 2rem;
     }
+}
 
-    .actions {
-        display: flex;
-        gap: 10px;
-    }
+.actions {
+    display: flex;
+    gap: 10px;
 }
 
 p-dropdown {
