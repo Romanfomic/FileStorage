@@ -51,7 +51,7 @@ export class FileAccessDialogComponent {
     fullAccessOptions = [
         { label: 'Нет доступа', value: null },
         { label: 'Чтение', value: 1 },
-        { label: 'Чтение и запись', value: 2 },
+        { label: 'Редактирование', value: 2 },
     ];
     
     load$!: Observable<any>;
@@ -66,7 +66,7 @@ export class FileAccessDialogComponent {
             tap((users) => this.allUsers = users)
         );
     
-        this.loadGroups$ = this.groupService.getGroups().pipe(
+        this.loadGroups$ = this.groupService.getAllGroups().pipe(
             tap((groups) => this.allGroups = groups)
         );
     

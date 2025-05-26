@@ -6,7 +6,7 @@ export interface FileMetadata {
     create_date: string;
     edit_date: string;
     version_id: number;
-    group_id?: number;
+    group_ids?: number[];
     owner_id?: number;
     access_id?: number;
 }

@@ -132,7 +132,8 @@ export class GroupsComponent {
             label: group.name,
             key: group.group_id.toString(),
             data: group,
-            children: group.children?.map(child => this.mapGroupToTreeNode(child)) || []
+            children: group.children?.map(child => this.mapGroupToTreeNode(child)) || [],
+            expanded: true,
         };
     }
 }

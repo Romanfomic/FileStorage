@@ -18,7 +18,7 @@ export class GroupService {
     } 
 
     getGroupById(id: number): Observable<Group> {
-        return this.http.get<Group>(`${this.baseUrl}/${id}`);
+        return this.http.get<Group>(`${environment.apiUrl}/api/group/${id}`);
     }
 
     createGroup(group: Partial<Group>): Observable<Group> {

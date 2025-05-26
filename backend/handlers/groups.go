@@ -70,6 +70,35 @@ func GetGroups(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(groups)
 }
 
+func GetGroupByID(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	groupIDStr := vars["id"]
+
+	groupID, err := strconv.Atoi(groupIDStr)
+	if err != nil {
+		http.Error(w, "Invalid group ID", http.StatusBadRequest)
+		return
+	}
+
+	var group Group
+	err = config.PostgresDB.QueryRow(`
+		SELECT group_id, name, description, parent_id
+		FROM Groups
+		WHERE group_id = $1
+	`, groupID).Scan(&group.ID, &group.Name, &group.Description, &group.ParentID)
+
+	if err == sql.ErrNoRows {
+		http.Error(w, "Group not found", http.StatusNotFound)
+		return
+	} else if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(group)
+}
+
 /*
 name: string
 description: string

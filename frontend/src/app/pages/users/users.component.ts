@@ -47,7 +47,7 @@ export class UsersComponent {
     loadRoles$: Observable<any> = this.roleService.getRoles().pipe(
         tap((roles) => this.roles = roles)
     );
-    loadGroups$: Observable<any> = this.groupService.getGroups().pipe(
+    loadGroups$: Observable<any> = this.groupService.getAllGroups().pipe(
         tap((groups) => this.groups = groups)
     );
     
