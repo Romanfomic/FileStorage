@@ -126,7 +126,7 @@ func GetSharedFiles(w http.ResponseWriter, r *http.Request) {
 
 	search := r.URL.Query().Get("search")
 
-	// Базовые SQL-запросы
+	// Base SQL
 	userFilesQuery := `
 		SELECT f.file_id, f.name, f.full_path, f.owner_id, fu.access_id, f.version_id, f.create_date, f.edit_date
 		FROM Files f
@@ -144,7 +144,7 @@ func GetSharedFiles(w http.ResponseWriter, r *http.Request) {
 	var userArgs = []interface{}{userID}
 	var groupArgs = []interface{}{userID}
 
-	// Добавляем фильтр поиска, если указан
+	// Add search filter
 	if search != "" {
 		userFilesQuery += " AND f.name ILIKE $2"
 		groupFilesQuery += " AND f.name ILIKE $2"
@@ -154,7 +154,7 @@ func GetSharedFiles(w http.ResponseWriter, r *http.Request) {
 
 	filesMap := make(map[int]*models.SharedFile)
 
-	// Обработка файлов, расшаренных напрямую
+	// Files shared by user
 	userRows, err := config.PostgresDB.Query(userFilesQuery, userArgs...)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
@@ -185,7 +185,7 @@ func GetSharedFiles(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Обработка файлов, расшаренных через группы
+	// Files shared by group
 	groupRows, err := config.PostgresDB.Query(groupFilesQuery, groupArgs...)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
